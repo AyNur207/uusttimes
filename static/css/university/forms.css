@@ -1,0 +1,32 @@
+/* Optional: login, registration and other forms. Load after core.css. */
+.uni-form-card {
+  width: min(100%, 500px);
+  margin-inline: auto;
+  padding: clamp(1.25rem, 5vw, 2.5rem);
+  border: 2px solid var(--uni-border);
+  border-radius: var(--uni-radius-lg);
+  background: var(--uni-surface-muted);
+}
+.uni-form-card--wide { width: min(100%, 700px); }
+.uni-field { display: grid; gap: var(--uni-space-2); }
+.uni-label { color: var(--uni-heading); font-weight: 600; }
+.uni-control {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: var(--uni-space-3);
+  border: 2px solid var(--uni-border);
+  border-radius: var(--uni-radius-md);
+  background: var(--uni-surface);
+  color: var(--uni-text);
+  transition: border-color var(--uni-duration), box-shadow var(--uni-duration);
+}
+.uni-control:focus { border-color: var(--uni-primary); box-shadow: var(--uni-focus-ring); }
+.uni-control[aria-invalid="true"] { border-color: var(--uni-danger); }
+.uni-control:disabled { background: var(--uni-neutral); cursor: not-allowed; }
+textarea.uni-control { min-height: 8rem; resize: vertical; }
+input.uni-control[type="file"] { cursor: pointer; }
+.uni-check { display: flex; align-items: center; gap: var(--uni-space-2); color: var(--uni-heading); font-weight: 500; }
+.uni-check input { flex-shrink: 0; width: 1.1rem; height: 1.1rem; accent-color: var(--uni-primary); }
+.uni-field-help { color: var(--uni-muted); font-size: .875rem; }
+.uni-field-error { color: var(--uni-danger); font-size: .875rem; }

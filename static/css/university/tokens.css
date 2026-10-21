@@ -1,0 +1,47 @@
+/* Extracted from Campus Helper; these are project choices, not an official brand specification. */
+:root {
+  --uni-font: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --uni-background: #f6f6f6;
+  --uni-surface: #ffffff;
+  --uni-surface-muted: #e8e8e8;
+  --uni-surface-tint: #f8f6ff;
+  --uni-primary: #4d19cc;
+  --uni-primary-hover: #5f30d1;
+  --uni-heading: #2a1468;
+  --uni-text: #373042;
+  --uni-muted: #655783;
+  --uni-on-primary: #f9fcff;
+  --uni-border: #cbb8ff;
+  --uni-border-subtle: #e5dfef;
+  --uni-accent: #efbb3e;
+  --uni-on-accent: #2a1468;
+  --uni-header: #212529;
+  --uni-quiz-accent: #facc15;
+  --uni-quiz-accent-hover: #eab308;
+  --uni-quiz-tint: #fefce8;
+  --uni-quiz-ink: #1c1e26;
+  --uni-neutral: #e5e7eb;
+  --uni-neutral-hover: #d1d5db;
+  --uni-danger: #a32032;
+  --uni-danger-tint: #fff0f1;
+  --uni-warning: #765000;
+  --uni-warning-tint: #fff7df;
+  --uni-space-1: .25rem;
+  --uni-space-2: .5rem;
+  --uni-space-3: .75rem;
+  --uni-space-4: 1rem;
+  --uni-space-5: 1.5rem;
+  --uni-space-6: 2rem;
+  --uni-space-7: 2.5rem;
+  --uni-space-8: 3rem;
+  --uni-radius-sm: .5rem;
+  --uni-radius-md: .625rem;
+  --uni-radius-lg: .875rem;
+  --uni-radius-xl: 1.125rem;
+  --uni-radius-pill: 999px;
+  --uni-shadow-sm: 0 2px 8px rgb(0 0 0 / 4%);
+  --uni-shadow-md: 0 4px 20px rgb(42 20 104 / 6%);
+  --uni-focus-ring: 0 0 0 .2rem rgb(77 25 204 / 18%);
+  --uni-duration: 200ms;
+  --uni-content-width: 1140px;
+}

@@ -1,0 +1,72 @@
+/* Opt in with <body class="uni-theme"> or a .uni-theme wrapper. */
+.uni-theme,
+.uni-theme *,
+.uni-theme *::before,
+.uni-theme *::after { box-sizing: border-box; }
+
+.uni-theme {
+  margin: 0;
+  background: var(--uni-background);
+  color: var(--uni-text);
+  font-family: var(--uni-font);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.uni-theme :where(h1, h2, h3, h4, h5, h6) {
+  margin: 0 0 var(--uni-space-3);
+  color: var(--uni-heading);
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.uni-theme h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+.uni-theme h2 { font-size: 1.5rem; }
+.uni-theme h3 { font-size: 1.25rem; }
+.uni-theme p { margin: 0 0 var(--uni-space-4); }
+.uni-theme a { color: var(--uni-primary); text-underline-offset: .2em; }
+.uni-theme a:hover { text-decoration: underline; }
+.uni-theme :where(button, input, select, textarea) { font: inherit; }
+.uni-theme :where(img, svg) { max-width: 100%; vertical-align: middle; }
+.uni-theme :where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--uni-primary);
+  outline-offset: 3px;
+}
+.uni-theme [hidden] { display: none !important; }
+
+.uni-container {
+  width: min(var(--uni-content-width), calc(100% - 2rem));
+  margin-inline: auto;
+}
+.uni-section { padding-block: var(--uni-space-8); }
+.uni-stack { display: flex; flex-direction: column; gap: var(--uni-space-4); }
+.uni-stack > * { margin-block: 0; }
+.uni-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--uni-space-3); }
+.uni-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--uni-space-5);
+}
+.uni-center { text-align: center; }
+.uni-muted { color: var(--uni-muted); }
+.uni-lead { color: var(--uni-muted); font-size: 1.25rem; }
+.uni-eyebrow { color: var(--uni-muted); font-size: .75rem; font-weight: 700; letter-spacing: .12em; }
+
+/* Keep native controls keyboard-accessible when a visual replacement is used. */
+.uni-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .uni-theme *, .uni-theme *::before, .uni-theme *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,9 @@
+/* Optional: image/map cards. Zoom dialogs require separate JavaScript. */
+.uni-map { overflow: hidden; border: 1px solid var(--uni-border); border-radius: var(--uni-radius-sm); background: var(--uni-surface-muted); }
+.uni-map__media { display: grid; place-items: center; background: var(--uni-border); color: var(--uni-heading); text-align: center; }
+.uni-map__media a { display: block; width: 100%; overflow: hidden; }
+.uni-map__image { display: block; width: 100%; height: auto; transition: transform var(--uni-duration); }
+.uni-map__media a:hover .uni-map__image { transform: scale(1.02); }
+.uni-map__body { padding: var(--uni-space-4); }
+.uni-map__body h3 { color: var(--uni-primary); }
+.uni-map__body > :last-child { margin-bottom: 0; }
