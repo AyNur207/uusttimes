@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>The UUST Times</title>
+  <rect width="64" height="64" rx="12" fill="#4d19cc"/>
+  <path d="M14 16h36v8h-3l-2-4h-9v25l5 2v3H23v-3l5-2V20h-9l-2 4h-3z" fill="#fffdf8"/>
+  <path d="M44 45h7v7h-7z" fill="#efbb3e"/>
+</svg>

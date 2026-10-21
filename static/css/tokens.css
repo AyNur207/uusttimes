@@ -1,0 +1,16 @@
+/* Project palette inspired by the read-only university reference. */
+:root {
+  --paper: #fcfbf8;
+  --surface: #ffffff;
+  --ink: #26212f;
+  --muted: #6c6575;
+  --purple: #4d19cc;
+  --purple-hover: #3c10a7;
+  --purple-ink: #2a1468;
+  --purple-wash: #f0ebfa;
+  --gold: #efbb3e;
+  --line: #dedbe1;
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: 'Golos Text', 'Segoe UI', Arial, sans-serif;
+  --content-width: 1200px;
+}

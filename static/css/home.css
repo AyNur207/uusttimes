@@ -1,0 +1,46 @@
+.editorial-intro { display: flex; align-items: center; justify-content: space-between; gap: 40px; padding: 43px 0 38px; }
+.editorial-intro .eyebrow { display: flex; align-items: center; gap: 9px; margin-bottom: 19px; }
+.small-star { color: var(--purple); font-size: 23px; line-height: 1; }
+.editorial-intro h1 { font: 48px/1.09 var(--serif); letter-spacing: -1.7px; margin-bottom: 19px; }
+.editorial-intro h1 em { color: var(--purple); font-weight: 400; }
+.intro-description { max-width: 525px; color: var(--muted); font-size: 14px; line-height: 1.85; margin-bottom: 0; }
+.intro-seal { flex: 0 0 144px; width: 144px; height: 144px; margin-right: 48px; border: 1px solid #c9bedc; outline: 1px solid #c9bedc; outline-offset: -8px; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; color: var(--purple); transform: rotate(-12deg); }
+.intro-seal span { font-size: 8px; letter-spacing: .18em; }
+.intro-seal strong { font: italic 31px var(--serif); }
+.section-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--line); padding-block: 15px; }
+.section-heading h2 { margin: 0; font: 700 20px var(--serif); }
+.section-heading > span { color: var(--muted); font-size: 12px; }
+.home-columns { display: grid; grid-template-columns: minmax(0, 1fr) 302px; gap: 30px; padding-top: 27px; }
+.feed-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 440px; padding: 35px 20px; border: 1px solid var(--line); background: linear-gradient(135deg, #fffdf9, #f7f4fb); }
+.empty-icon { display: grid; place-items: center; width: 56px; height: 56px; border: 1px solid #d3c7e6; border-radius: 50%; color: var(--purple); margin-bottom: 25px; }
+.empty-icon .icon { width: 26px; height: 26px; }
+.feed-empty .eyebrow { font-size: 9px; margin-bottom: 13px; }
+.feed-empty h2 { font: 35px/1.13 var(--serif); letter-spacing: -.8px; margin-bottom: 17px; }
+.feed-empty > p:not(.eyebrow) { color: var(--muted); font-size: 13px; line-height: 1.9; margin-bottom: 20px; }
+.empty-rule { height: 1px; width: 30px; background: var(--purple); margin-bottom: 14px; }
+.empty-signature { color: var(--muted); font: italic 12px var(--serif); }
+.sidebar { border-left: 1px solid var(--line); padding-left: 27px; }
+.about-card { padding: 3px 0 23px; scroll-margin-top: 20px; }
+.about-card .eyebrow { font-size: 9px; margin-bottom: 15px; }
+.about-card h2 { font: 29px/1.12 var(--serif); letter-spacing: -.6px; margin-bottom: 15px; }
+.about-card > p:not(.eyebrow) { color: var(--muted); font-size: 13px; line-height: 1.9; margin-bottom: 17px; }
+.support-card { padding: 21px; background: var(--purple-wash); border-top: 2px solid var(--purple); }
+.support-card-icon { display: inline-grid; place-items: center; width: 29px; height: 29px; background: var(--gold); color: var(--purple-ink); border-radius: 50%; margin-bottom: 14px; }
+.support-card-icon .icon { width: 15px; height: 15px; }
+.support-card h2 { font: 23px/1.15 var(--serif); margin-bottom: 12px; color: var(--purple-ink); }
+.support-card p { font-size: 12px; line-height: 1.8; color: #62516f; margin-bottom: 18px; }
+.support-card .button { width: 100%; font-size: 10px; min-height: 39px; padding-inline: 10px; justify-content: space-between; }
+.support-card .button .icon { width: 16px; height: 16px; }
+@media (min-width: 1440px) { .editorial-intro { padding-block: 52px 46px; } .editorial-intro h1 { font-size: 54px; } }
+@media (max-width: 900px) { .home-columns { grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; } .sidebar { padding-left: 20px; } .intro-seal { margin-right: 20px; } .editorial-intro h1 { font-size: 43px; } }
+@media (max-width: 700px) {
+  .editorial-intro { padding-block: 30px; gap: 10px; }
+  .editorial-intro h1 { font-size: clamp(32px, 6vw, 43px); }
+  .intro-seal { display: none; }
+  .intro-description { font-size: 14px; }
+  .home-columns { grid-template-columns: 1fr; gap: 25px; padding-top: 20px; }
+  .feed-empty { min-height: 370px; }
+  .feed-empty h2 { font-size: 31px; }
+  .sidebar { border-left: 0; padding-left: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+}
+@media (max-width: 460px) { .sidebar { grid-template-columns: 1fr; gap: 16px; } .about-card { padding: 10px 0; } .section-heading h2 { font-size: 18px; } .editorial-intro .eyebrow { font-size: 8px; } .desktop-break { display: none; } }

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Поддержать разработчиков{% endblock %}
+{% block content %}
+<section class="message-page" aria-labelledby="support-heading">
+  <span class="message-icon">{{ icon('heart') }}</span>
+  <p class="eyebrow">Поддержка разработчиков</p>
+  <h1 id="support-heading">Вы помогаете<br>историям случаться.</h1>
+  <p>Мы создаём The UUST Times для студенческого сообщества. Ваша поддержка помогает развивать издание и делать его удобнее.</p>
+  {% if donation_url %}
+  <a class="button" href="{{ donation_url }}" target="_blank" rel="noopener noreferrer">Поддержать разработчиков {{ icon('heart') }}<span class="visually-hidden"> (откроется в новой вкладке)</span></a>
+  {% else %}
+  <div class="support-notice"><strong>Спасибо, что вы с нами.</strong><p>Возможность поддержать проект появится здесь чуть позже.</p></div>
+  {% endif %}
+  <a class="text-link" href="{{ url_for('main.index') }}">Вернуться к ленте {{ icon('arrow') }}</a>
+</section>
+{% endblock %}

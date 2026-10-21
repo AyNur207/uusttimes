@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="message-page" aria-labelledby="account-heading">
+  <span class="message-icon">{{ icon('paper') }}</span>
+  <p class="eyebrow">{{ title }}</p>
+  <h1 id="account-heading">{{ heading }}</h1>
+  <p>{{ description }}</p>
+  <span class="status-label">Скоро в The UUST Times</span>
+  <a class="button" href="{{ url_for('main.index') }}">Вернуться к ленте {{ icon('arrow') }}</a>
+</section>
+{% endblock %}

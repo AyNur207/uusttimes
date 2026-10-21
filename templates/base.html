@@ -1,0 +1,66 @@
+{% from 'partials/icons.html' import icon %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#4d19cc">
+  <meta name="description" content="{% block description %}The UUST Times — студенческое издание о событиях, людях и жизни Уфимского университета науки и технологий.{% endblock %}">
+  <title>{% block title %}Новости университета{% endblock %} · The UUST Times</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/brand-mark.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  {% block styles %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Перейти к содержимому</a>
+  <header class="site-header container">
+    <div class="utility-bar">
+      <a class="edition-label" href="{{ url_for('main.index') }}">Студенческое издание <span class="edition-dot" aria-hidden="true"></span> УУНиТ</a>
+      <div class="header-actions">
+        <a class="support-link{% if request.endpoint == 'main.support' %} is-active{% endif %}" href="{{ url_for('main.support') }}"{% if request.endpoint == 'main.support' %} aria-current="page"{% endif %}>{{ icon('heart') }} <span>Поддержать разработчиков</span></a>
+        <span class="action-divider" aria-hidden="true"></span>
+        <a class="login-link" href="{{ url_for('main.login') }}"{% if request.endpoint == 'main.login' %} aria-current="page"{% endif %}>Войти</a>
+        <a class="button button--small" href="{{ url_for('main.register') }}"{% if request.endpoint == 'main.register' %} aria-current="page"{% endif %}>Регистрация {{ icon('arrow') }}</a>
+      </div>
+    </div>
+    <div class="masthead">
+      <div class="masthead-date"><span>{{ publication_weekday }}</span><time datetime="{{ publication_iso }}">{{ publication_date }}</time></div>
+      <a class="brand" href="{{ url_for('main.index') }}" aria-label="The UUST Times — на главную">
+        <img class="brand-mark" src="{{ url_for('static', filename='images/brand-mark.svg') }}" width="52" height="52" alt="">
+        <span class="brand-wordmark">The UUST Times<span class="brand-period">.</span></span>
+      </a>
+      <p class="masthead-note">Университет.<br>Люди. События.</p>
+    </div>
+    <div class="navigation-bar">
+      <nav class="main-nav" aria-label="Основная навигация">
+        <a class="nav-link{% if request.endpoint == 'main.index' %} is-active{% endif %}" href="{{ url_for('main.index') }}"{% if request.endpoint == 'main.index' %} aria-current="page"{% endif %}>Лента новостей</a>
+        <a class="nav-link" href="{{ url_for('main.index') }}#about">Об издании</a>
+      </nav>
+      <span class="navigation-caption">Всё, чем живёт наш университет</span>
+    </div>
+  </header>
+
+  <main id="main-content" class="container main-content" tabindex="-1">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="notices" role="status">
+        {% for category, message in messages %}<p class="notice notice--{{ category }}">{{ message }}</p>{% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer container">
+    <div class="footer-top">
+      <a class="footer-brand" href="{{ url_for('main.index') }}">The UUST Times<span class="brand-period">.</span></a>
+      <p>Сделано студентами. Для студентов.</p>
+      <a class="footer-support" href="{{ url_for('main.support') }}">{{ icon('heart') }} Поддержать проект {{ icon('arrow') }}</a>
+    </div>
+    <div class="footer-bottom"><span>© {{ current_year }} The UUST Times</span><span>Независимое студенческое издание · Уфа</span></div>
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
