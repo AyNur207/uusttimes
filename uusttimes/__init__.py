@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from dotenv import dotenv_values
 from flask import Flask
 from flask_wtf.csrf import CSRFError, CSRFProtect
 
@@ -52,6 +53,7 @@ def _get_donation_url(value):
 
 def create_app(test_config=None):
     root = Path(__file__).resolve().parent.parent
+    file_config = dotenv_values(root / ".env", encoding="utf-8-sig")
     app = Flask(
         __name__,
         static_folder=str(root / "static"),
@@ -60,8 +62,8 @@ def create_app(test_config=None):
         instance_relative_config=True,
     )
     app.config.from_mapping(
-        SECRET_KEY=os.environ.get("SECRET_KEY"),
-        DONATION_URL=os.environ.get("DONATION_URL", ""),
+        SECRET_KEY=os.environ.get("SECRET_KEY", file_config.get("SECRET_KEY")),
+        DONATION_URL=os.environ.get("DONATION_URL", file_config.get("DONATION_URL", "")),
         SQLALCHEMY_DATABASE_URI="sqlite:///uusttimes.db",
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         UPLOAD_FOLDER=str(root / "instance" / "uploads"),

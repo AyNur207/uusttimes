@@ -20,7 +20,7 @@ class PaymentLinks(HTMLParser):
 class SupportTests(unittest.TestCase):
     def render(self, url):
         app = create_app({
-            "TESTING": True, "DONATION_URL": 'https://pay.cloudtips.ru/p/dc52cd81',
+            "TESTING": True, "DONATION_URL": url,
             "SECRET_KEY": "test-only-key", "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
         })
         response = app.test_client().get("/support")
