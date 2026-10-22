@@ -1,5 +1,7 @@
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { 
+    scroll-behavior: smooth;
+ }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.65 var(--sans); min-height: 100vh; display: flex; flex-direction: column; }
 body, h1, h2, p { overflow-wrap: break-word; }
 h1, h2, h3, p { margin-top: 0; }

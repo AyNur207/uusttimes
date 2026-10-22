@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
   {% block styles %}{% endblock %}
 </head>
 <body>
@@ -35,7 +36,8 @@
     </div>
     <div class="navigation-bar">
       <nav class="main-nav" aria-label="Основная навигация">
-        <a class="nav-link{% if request.endpoint == 'main.index' %} is-active{% endif %}" href="{{ url_for('main.index') }}"{% if request.endpoint == 'main.index' %} aria-current="page"{% endif %}>Лента новостей</a>
+        <a class="nav-link{% if request.endpoint in ('main.index', 'main.news_detail') %} is-active{% endif %}" href="{{ url_for('main.index') }}"{% if request.endpoint == 'main.index' %} aria-current="page"{% endif %}>Лента новостей</a>
+        <a class="nav-link{% if request.endpoint in ('main.my_news', 'main.new_news') %} is-active{% endif %}" href="{{ url_for('main.my_news') }}"{% if request.endpoint == 'main.my_news' %} aria-current="page"{% endif %}>Мои новости</a>
         <a class="nav-link" href="{{ url_for('main.index') }}#about">Об издании</a>
       </nav>
       <span class="navigation-caption">Всё, чем живёт наш университет</span>

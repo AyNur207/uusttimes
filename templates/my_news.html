@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Мои новости{% endblock %}
+{% block description %}Ваши публикации в The UUST Times. Рассказывайте о событиях и жизни университета.{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/my-news.css') }}">
+{% endblock %}
+{% block content %}
+<section class="my-news-intro" aria-labelledby="my-news-heading">
+  <p class="eyebrow">Ваша авторская колонка</p>
+  <h1 id="my-news-heading">Мои <em>новости.</em></h1>
+  <p>Новости, которые вы отправили из этого браузера. Сейчас они публикуются сразу, без проверки редакцией.</p>
+  <a class="button my-news-submit" href="{{ url_for('main.new_news') }}">Предложить новость {{ icon('arrow') }}</a>
+</section>
+
+<div class="my-news-layout">
+  <section class="my-news-list" aria-labelledby="materials-heading">
+    <div class="my-news-list-heading">
+      <h2 id="materials-heading">Ваши материалы</h2>
+      <span>Всего: {{ pagination.total }}</span>
+    </div>
+    {% if pagination.items %}
+    {% for news in pagination.items %}{% include 'partials/news_card.html' %}{% endfor %}
+    {% include 'partials/pagination.html' %}
+    {% else %}
+    <div class="my-news-empty">
+      <span class="my-news-empty-icon">{{ icon('paper') }}</span>
+      <p class="eyebrow">Всё начинается с истории</p>
+      <h3>Ваша первая новость<br>ещё впереди.</h3>
+      <p>Заметили что-то интересное в университете? Напишите новость, и она появится здесь и в общей ленте.</p>
+      <a class="button" href="{{ url_for('main.new_news') }}">Написать новость {{ icon('arrow') }}</a>
+    </div>
+    {% endif %}
+  </section>
+
+  <aside class="my-news-guide" aria-labelledby="review-heading">
+    <p class="eyebrow">От идеи до первой полосы</p>
+    <h2 id="review-heading">Отправьте — и читайте</h2>
+    <ol class="review-stages">
+      <li>
+        <strong>1. Напишите историю</strong>
+        <p>Добавьте заголовок, текст и, по желанию, обложку и сведения о событии.</p>
+      </li>
+      <li>
+        <strong>2. Опубликуйте</strong>
+        <p>После отправки новость сразу становится доступна всем в общей ленте.</p>
+      </li>
+      <li>
+        <strong>3. Поделитесь ссылкой</strong>
+        <p>У каждой публикации есть отдельная страница с полным текстом.</p>
+      </li>
+    </ol>
+    <p class="my-news-guide-note">Без аккаунта список «Мои новости» связан с этим браузером. Если очистить cookies или сменить браузер, список будет другим. Опубликованные новости останутся в общей ленте.</p>
+  </aside>
+</div>
+{% endblock %}

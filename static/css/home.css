@@ -4,6 +4,8 @@
 .editorial-intro h1 { font: 48px/1.09 var(--serif); letter-spacing: -1.7px; margin-bottom: 19px; }
 .editorial-intro h1 em { color: var(--purple); font-weight: 400; }
 .intro-description { max-width: 525px; color: var(--muted); font-size: 14px; line-height: 1.85; margin-bottom: 0; }
+.intro-submit { margin-top: 23px; }
+.news-feed { min-width: 0; }
 .intro-seal { flex: 0 0 144px; width: 144px; height: 144px; margin-right: 48px; border: 1px solid #c9bedc; outline: 1px solid #c9bedc; outline-offset: -8px; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; color: var(--purple); transform: rotate(-12deg); }
 .intro-seal span { font-size: 8px; letter-spacing: .18em; }
 .intro-seal strong { font: italic 31px var(--serif); }
