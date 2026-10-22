@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Модерация — The UUST Times{% endblock %}
+{% block content %}
+<section class="page">
+  <h1>Модерация</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="flash flash--{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if not items %}
+    <p class="muted">Новых предложений нет.</p>
+  {% else %}
+    <ul class="moderation-list">
+      {% for item in items %}
+        <li class="moderation-item">
+          <h2>{{ item.title }}</h2>
+          <p class="muted">
+            Автор: {{ item.author.email }}
+            · {{ item.created_at.strftime("%d.%m.%Y %H:%M") }} UTC
+          </p>
+          <div class="moderation-item__body">{{ item.body }}</div>
+          <div class="moderation-item__actions">
+            <form method="post" action="{{ url_for('news.approve', item_id=item.id) }}">
+              <button type="submit" class="button">Опубликовать</button>
+            </form>
+            <form method="post" action="{{ url_for('news.reject', item_id=item.id) }}">
+              <button type="submit" class="button button--ghost">Отклонить</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</section>
+{% endblock %}

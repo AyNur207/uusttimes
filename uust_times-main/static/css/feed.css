@@ -1,0 +1,47 @@
+/* Лента новостей */
+.feed-list { display: grid; gap: 20px; }
+.news-card {
+  padding: 24px 28px;
+  background: #fff;
+  border: 1px solid #e5e1f4;
+  border-radius: 14px;
+}
+.news-card__title { margin: 6px 0 12px; font-size: 24px; line-height: 1.25; }
+.news-card__body  { margin: 0 0 16px; white-space: pre-line; }
+.news-card__meta  { margin: 0; color: #7b7794; font-size: 14px; }
+
+/* Шапка: email и кнопка выхода */
+.header-user {
+  max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: #7b7794; font-size: 14px;
+}
+.logout-form { display: inline; margin: 0; }
+.logout-form button { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+
+/* Формы (вход, регистрация, отправка новости) */
+.auth-page { max-width: 520px; margin: 48px auto; }
+.auth-page h1 { margin: 8px 0 12px; }
+.form { display: grid; gap: 16px; margin: 24px 0; }
+.form label { display: grid; gap: 6px; font-weight: 600; }
+.form input,
+.form textarea {
+  width: 100%; padding: 12px 14px;
+  border: 1px solid #d6d1ec; border-radius: 10px;
+  font: inherit; background: #fff;
+}
+.form textarea { resize: vertical; min-height: 160px; }
+.form input:focus,
+.form textarea:focus { outline: 2px solid #4d19cc; outline-offset: 2px; }
+.auth-switch { color: #7b7794; }
+.auth-switch a { color: #4d19cc; }
+
+/* Модерация */
+.moderation-list { list-style: none; padding: 0; display: grid; gap: 20px; }
+.moderation-item {
+  padding: 20px 24px; background: #fff;
+  border: 1px solid #e5e1f4; border-radius: 14px;
+}
+.moderation-item h2 { margin: 0 0 6px; font-size: 22px; }
+.moderation-item__body { white-space: pre-line; margin: 12px 0 16px; }
+.moderation-item__actions { display: flex; gap: 12px; }
+.moderation-item__actions form { margin: 0; }

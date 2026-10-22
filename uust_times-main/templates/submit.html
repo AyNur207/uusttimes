@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Предложить новость — The UUST Times{% endblock %}
+{% block content %}
+<section class="page">
+  <h1>Предложить новость</h1>
+  <p class="muted">Опишите событие: что, где и когда произошло. Администратор проверит и опубликует.</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="flash flash--{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="post" class="form">
+    <label>
+      Заголовок
+      <input type="text" name="title" required minlength="5" maxlength="200"
+             value="{{ form.title or '' }}">
+    </label>
+    <label>
+      Текст
+      <textarea name="body" required minlength="20" rows="10">{{ form.body or '' }}</textarea>
+    </label>
+    <button type="submit" class="button">Отправить на модерацию</button>
+  </form>
+</section>
+{% endblock %}
