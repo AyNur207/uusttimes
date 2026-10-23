@@ -1,5 +1,3 @@
-"""Authenticated submissions and admin moderation with one publication model."""
-
 from datetime import timedelta, timezone
 from functools import wraps
 from pathlib import Path
@@ -140,8 +138,6 @@ def delete_news(news_id):
     cover_filename = item.cover_filename
     try:
         db.session.execute(db.delete(NewsReaction).where(NewsReaction.news_id == news_id))
-        # Retain the ID and seed key so old links cannot point to a new article
-        # and startup imports cannot resurrect an administrator's deletion.
         item.status = "deleted"
         item.title = ""
         item.body = ""
@@ -166,7 +162,6 @@ def delete_news(news_id):
             try:
                 cover_path.unlink(missing_ok=True)
             except OSError:
-                # The DB copy is already removed; cache cleanup must not undo deletion.
                 current_app.logger.warning("Не удалось очистить локальный кеш обложки удалённой новости.")
     flash("Новость удалена.", "success")
     return redirect(url_for("main.index"), code=303)

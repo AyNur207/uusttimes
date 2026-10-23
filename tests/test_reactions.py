@@ -1,5 +1,3 @@
-"""Real CSRF requests for reactions, access controls, counts and persistence."""
-
 from html.parser import HTMLParser
 from pathlib import Path
 from tempfile import TemporaryDirectory

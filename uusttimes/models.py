@@ -1,5 +1,3 @@
-"""One model shared by publishing, accounts and moderation."""
-
 from datetime import datetime, timezone
 
 from flask_login import UserMixin
@@ -38,7 +36,6 @@ class User(UserMixin, db.Model):
 
 
 class News(db.Model):
-    # Retain emil's table and foreign keys so deployed users/news remain valid.
     __tablename__ = "news_items"
     __table_args__ = (
         Index("ix_news_items_feed", "status", "published_at"),
@@ -85,7 +82,6 @@ class NewsReaction(db.Model):
         Index("ix_news_reactions_counts", "news_id", "kind"),
     )
 
-    # The composite primary key enforces one reaction per account and article.
     news_id = db.Column(db.Integer, db.ForeignKey("news_items.id", ondelete="CASCADE"), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     kind = db.Column(db.String(20), nullable=False)

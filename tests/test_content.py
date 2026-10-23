@@ -1,5 +1,3 @@
-"""Bundled content, repeat imports, category filtering and safe updates."""
-
 from collections import Counter
 from io import BytesIO
 from pathlib import Path

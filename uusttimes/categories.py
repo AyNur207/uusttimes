@@ -1,5 +1,3 @@
-
-
 CATEGORIES = {
     "study": "Учёба",
     "science": "Наука",

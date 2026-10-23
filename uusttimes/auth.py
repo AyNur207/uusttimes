@@ -1,5 +1,3 @@
-"""Registration and signed login sessions with validated CSRF forms."""
-
 from urllib.parse import urljoin, urlparse
 
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for

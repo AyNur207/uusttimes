@@ -1,5 +1,3 @@
-"""Flask CLI entry point: flask --app app run --debug."""
-
 from uusttimes import create_app
 app = create_app()
 def main():

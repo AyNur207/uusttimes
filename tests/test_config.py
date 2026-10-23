@@ -1,5 +1,3 @@
-"""Persistent dotenv configuration and explicit override precedence."""
-
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory

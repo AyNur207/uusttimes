@@ -1,5 +1,3 @@
-"""Public feed and account-scoped news, with protected unpublished previews."""
-
 from flask import Blueprint, Response, abort, current_app, render_template, request, send_from_directory
 from flask_login import current_user, login_required
 

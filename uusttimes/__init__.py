@@ -1,5 +1,3 @@
-"""Application factory for The UUST Times."""
-
 import os
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -34,7 +32,6 @@ def _database_uri(value):
 
 
 def _local_secret_key(instance_path):
-    """Keep anonymous browser sessions valid across local server restarts."""
     key_path = Path(instance_path) / ".secret_key"
     try:
         with key_path.open("x", encoding="utf-8") as file:
@@ -45,7 +42,6 @@ def _local_secret_key(instance_path):
 
 
 def _get_donation_url(value):
-    """Accept a public HTTPS link, never embedded credentials or malformed URLs."""
     if not isinstance(value, str):
         return ""
     value = value.strip()
@@ -53,7 +49,6 @@ def _get_donation_url(value):
         return ""
     try:
         parsed = urlsplit(value)
-        # Accessing port also validates malformed and out-of-range port numbers.
         port = parsed.port
         if (
             parsed.scheme != "https"

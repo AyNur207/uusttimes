@@ -1,5 +1,3 @@
-"""Donation page states and URL validation; no real payments or network calls."""
-
 import unittest
 from html.parser import HTMLParser
 

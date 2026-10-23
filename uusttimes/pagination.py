@@ -1,5 +1,3 @@
-"""Consistent pagination for the public feed, own news and moderation."""
-
 from flask import request
 
 from .models import db

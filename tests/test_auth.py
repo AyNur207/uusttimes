@@ -1,5 +1,3 @@
-"""Real CSRF-protected registration/login/logout and administrator setup."""
-
 import re
 import unittest
 

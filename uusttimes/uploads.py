@@ -1,5 +1,3 @@
-"""Validate and re-encode cover images before writing to private app storage."""
-
 from io import BytesIO
 from pathlib import Path
 from uuid import uuid4
@@ -13,7 +11,6 @@ class InvalidCover(ValueError):
 
 
 def encode_cover(data):
-    """Use the same image checks for user uploads and bundled news."""
     if len(data) > 5 * 1024 * 1024:
         raise InvalidCover("Размер обложки не должен превышать 5 МБ.")
     try:

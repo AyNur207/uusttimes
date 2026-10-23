@@ -1,5 +1,3 @@
-"""News submission validation, independent of authentication."""
-
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from urllib.parse import urlsplit

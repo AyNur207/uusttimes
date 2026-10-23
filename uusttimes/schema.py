@@ -1,5 +1,3 @@
-"""Add the merged news fields to emil's existing SQLite/PostgreSQL schema."""
-
 from sqlalchemy import inspect, text
 from sqlalchemy.schema import CreateColumn
 
@@ -7,7 +5,6 @@ from .models import News, db
 
 
 def upgrade_schema():
-    """An additive, idempotent upgrade: never drop tables or delete records."""
     inspector = inspect(db.engine)
     if not inspector.has_table("news_items"):
         db.metadata.create_all(db.engine)

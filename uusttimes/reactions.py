@@ -1,5 +1,3 @@
-"""Account-scoped reactions and batched counts for published articles."""
-
 from urllib.parse import urlsplit
 
 from flask import Blueprint, abort, current_app, flash, jsonify, redirect, request, url_for
@@ -61,7 +59,6 @@ def react(news_id):
             return jsonify(message="Войдите, чтобы оставить реакцию.", login_url=login_url), 401
         flash("Войдите, чтобы оставить реакцию.", "error")
         return redirect(login_url, code=303)
-    # Even authors and moderators cannot react to unpublished previews.
     item = db.session.scalar(db.select(News).where(News.id == news_id, News.status == "published"))
     if item is None:
         if request.accept_mimetypes.best == "application/json":
@@ -78,7 +75,6 @@ def react(news_id):
         else:
             result = db.session.execute(db.update(NewsReaction).where(*pair).values(kind=kind))
             if result.rowcount == 0:
-                # A concurrent first reaction can race this insert; the PK protects it.
                 try:
                     with db.session.begin_nested():
                         db.session.add(NewsReaction(news_id=news_id, user_id=current_user.id, kind=kind))

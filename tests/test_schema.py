@@ -1,5 +1,3 @@
-"""Upgrade emil's exact old table layout without losing identities or news."""
-
 import sqlite3
 from contextlib import closing
 import re

@@ -1,5 +1,3 @@
-
-
 import re
 import secrets
 from pathlib import Path
@@ -15,7 +13,6 @@ EDITOR_EMAIL = "edition@uusttimes.invalid"
 
 
 def read_news(path, static_root):
-    """Each ## news-NNN block contains key: value metadata, ---, then plain text."""
     text = Path(path).read_text(encoding="utf-8-sig")
     blocks = re.split(r"^## (news-\d{3,})\s*$", text, flags=re.MULTILINE)
     if len(blocks) == 1:
@@ -68,7 +65,6 @@ def read_news(path, static_root):
 
 
 def import_news(path, static_root, update=False, _retry=True):
-    """Startup inserts missing IDs only; explicit --update refreshes their content."""
     records = read_news(path, static_root)
     created = updated = 0
     try:
@@ -81,7 +77,6 @@ def import_news(path, static_root, update=False, _retry=True):
             author = db.session.scalar(db.select(User).where(User.email == EDITOR_EMAIL))
             if author is None:
                 author = User(email=EDITOR_EMAIL, role="member")
-                # Reserved, non-routable address and an unknown random password.
                 author.set_password(secrets.token_urlsafe(48))
                 db.session.add(author)
                 db.session.flush()
@@ -103,7 +98,6 @@ def import_news(path, static_root, update=False, _retry=True):
             else:
                 for name, value in values.items():
                     setattr(item, name, value)
-                # Keep the original date, author and any later moderation decision.
                 updated += 1
         db.session.commit()
     except IntegrityError:

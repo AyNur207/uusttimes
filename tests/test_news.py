@@ -1,5 +1,3 @@
-"""Exercise account ownership, publishing, moderation, persistence and uploads."""
-
 from html.parser import HTMLParser
 from io import BytesIO
 from pathlib import Path
@@ -86,7 +84,6 @@ class NewsTests(TestCase):
         }
         data.update(fields)
         response = client.post("/news/new", data=data)
-        # The test client's multipart builder may spool large request bodies to disk.
         response.request.environ["wsgi.input"].close()
         return response
 
@@ -106,7 +103,7 @@ class NewsTests(TestCase):
             self.assertEqual(news.status, "published")
             self.assertEqual(news.author_id, self.admin_id)
             self.assertEqual(news.reviewer_id, self.admin_id)
-            self.assertEqual(news.event_at.hour, 13)  # 18:30 Ufa -> 13:30 UTC
+            self.assertEqual(news.event_at.hour, 13)
         for path in ("/", "/my-news", "/news/1"):
             html = self.client.get(path).get_data(as_text=True)
             self.assertIn("Турнир по шахматам", html)
@@ -267,7 +264,6 @@ class NewsTests(TestCase):
         member = self.member_client()
         self.publish(member, cover=(image_file(), "cover.png"))
         stranger = self.app.test_client()
-        # An unrelated non-admin account.
         with self.app.app_context():
             user = User(email="stranger@example.com", role="member", password_hash="unused")
             db.session.add(user)
@@ -397,7 +393,6 @@ class NewsTests(TestCase):
         self.assertEqual(self.delete(client=member).status_code, 403)
         guest = self.app.test_client()
         token = self.token(self.client)
-        # A separate guest token, not an administrator's token.
         parser = FormToken()
         parser.feed(guest.get("/login").get_data(as_text=True))
         result = guest.post("/news/1/delete", data={"csrf_token": parser.value, "confirm": "yes"})
