@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Мои новости{% endblock %}
+{% block description %}Ваши публикации в The UUST Times. Рассказывайте о событиях и жизни университета.{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/my-news.css') }}">
+{% endblock %}
+{% block content %}
+<section class="my-news-intro" aria-labelledby="my-news-heading">
+  <p class="eyebrow">Ваша авторская колонка</p>
+  <h1 id="my-news-heading">Мои <em>новости.</em></h1>
+  <p>Ваши материалы, статусы проверки и комментарии редакции. Они доступны из любого браузера после входа в аккаунт.</p>
+  <a class="button my-news-submit" href="{{ url_for('news.submit') }}">Предложить новость {{ icon('arrow') }}</a>
+</section>
+
+<div class="my-news-layout">
+  <section class="my-news-list" aria-labelledby="materials-heading">
+    <div class="my-news-list-heading">
+      <h2 id="materials-heading">Ваши материалы</h2>
+      <span>Всего: {{ pagination.total }}</span>
+    </div>
+    {% if pagination.items %}
+    {% for news in pagination.items %}{% include 'partials/news_card.html' %}{% endfor %}
+    {% include 'partials/pagination.html' %}
+    {% else %}
+    <div class="my-news-empty">
+      <span class="my-news-empty-icon">{{ icon('paper') }}</span>
+      <p class="eyebrow">Всё начинается с истории</p>
+      <h3>Ваша первая новость<br>ещё впереди.</h3>
+      <p>Заметили что-то интересное в университете? Напишите новость и следите за её статусом здесь.</p>
+      <a class="button" href="{{ url_for('news.submit') }}">Написать новость {{ icon('arrow') }}</a>
+    </div>
+    {% endif %}
+  </section>
+
+  <aside class="my-news-guide" aria-labelledby="review-heading">
+    <p class="eyebrow">От идеи до первой полосы</p>
+    <h2 id="review-heading">Путь вашей новости</h2>
+    <ol class="review-stages">
+      <li>
+        <strong>1. Напишите историю</strong>
+        <p>Добавьте заголовок, текст и, по желанию, обложку и сведения о событии.</p>
+      </li>
+      <li>
+        <strong>2. Отправьте в редакцию</strong>
+        <p>Обычные заявки проходят проверку. Администраторы могут сразу опубликовать свой материал.</p>
+      </li>
+      <li>
+        <strong>3. Поделитесь ссылкой</strong>
+        <p>У каждой публикации есть отдельная страница с полным текстом.</p>
+      </li>
+    </ol>
+    <p class="my-news-guide-note">Если новость отклонена, здесь будет указана причина. Пока материал не опубликован, он доступен только вам и редакции.</p>
+  </aside>
+</div>
+{% endblock %}

@@ -5,3 +5,4 @@ __pycache__/
 instance/*
 !instance/.gitkeep
 .pytest_cache/
+uusttimes/__pycache__/

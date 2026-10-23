@@ -1,16 +1,55 @@
 {% extends 'base.html' %}
 {% block title %}Поддержать разработчиков{% endblock %}
+{% block description %}Поддержите разработчиков The UUST Times — студенческого издания УУНиТ. Добровольный вклад в развитие проекта.{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/support.css') }}">
+{% endblock %}
 {% block content %}
-<section class="message-page" aria-labelledby="support-heading">
-  <span class="message-icon">{{ icon('heart') }}</span>
-  <p class="eyebrow">Поддержка разработчиков</p>
-  <h1 id="support-heading">Вы помогаете<br>историям случаться.</h1>
-  <p>Мы создаём The UUST Times для студенческого сообщества. Ваша поддержка помогает развивать издание и делать его удобнее.</p>
-  {% if donation_url %}
-  <a class="button" href="{{ donation_url }}" target="_blank" rel="noopener noreferrer">Поддержать разработчиков {{ icon('heart') }}<span class="visually-hidden"> (откроется в новой вкладке)</span></a>
-  {% else %}
-  <div class="support-notice"><strong>Спасибо, что вы с нами.</strong><p>Возможность поддержать проект появится здесь чуть позже.</p></div>
-  {% endif %}
-  <a class="text-link" href="{{ url_for('main.index') }}">Вернуться к ленте {{ icon('arrow') }}</a>
+<section class="support-intro" aria-labelledby="support-heading">
+  <p class="eyebrow">От сообщества — с поддержкой</p>
+  <h1 id="support-heading">У хороших историй<br>есть <em>свои герои.</em></h1>
+  <p>Мы — студенты, которые создают The UUST Times. Если вам нравится то, что мы делаем, поддержите разработчиков добровольным донатом.</p>
 </section>
+
+<div class="support-layout">
+  <section class="donation-card" aria-labelledby="donation-heading">
+    <span class="donation-heart" aria-hidden="true">{{ icon('heart') }}</span>
+    <p class="eyebrow">На развитие The UUST Times</p>
+    <h2 id="donation-heading">Небольшой вклад.<br>Большое спасибо.</h2>
+    <p>Любая сумма — это поддержка нашей команды и новых возможностей издания.</p>
+    {% if donation_url %}
+    <a class="button donation-button" href="{{ donation_url }}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">Поддержать разработчиков {{ icon('arrow') }}<span class="visually-hidden"> (откроется в новой вкладке)</span></a>
+    <p class="donation-destination">Откроется платёжная страница<br><strong>{{ donation_host }}</strong></p>
+    {% else %}
+    <div class="donation-pending">
+      <span class="status-label">Скоро</span>
+      <h3>Готовим приём донатов</h3>
+      <p>Здесь появится переход на платёжную страницу. Спасибо, что хотите нас поддержать.</p>
+    </div>
+    {% endif %}
+    <p class="donation-note">Поддержка добровольная. Чтение новостей остаётся бесплатным.</p>
+  </section>
+
+  <section class="donation-details" aria-labelledby="donation-details-heading">
+    <p class="eyebrow">Просто и с заботой</p>
+    <h2 id="donation-details-heading">Как это работает</h2>
+    <ol class="donation-steps">
+      <li><span><strong>Перейдите к оплате</strong>Кнопка откроет страницу платёжного сервиса в новой вкладке.</span></li>
+      <li><span><strong>Выберите сумму</strong>Способ оплаты и возможная комиссия будут указаны на стороне сервиса.</span></li>
+      <li><span><strong>Подтвердите перевод</strong>Результат платежа и подтверждение покажет платёжный сервис.</span></li>
+    </ol>
+    <details class="donation-question">
+      <summary>Где вводить данные карты?</summary>
+      <p>Только на странице платёжного сервиса, если вы выберете оплату картой. The UUST Times не запрашивает и не хранит её реквизиты.</p>
+    </details>
+    <details class="donation-question">
+      <summary>Можно помочь без доната?</summary>
+      <p>Конечно. Расскажите друзьям об издании, поделитесь интересной новостью или сообщите команде, что можно улучшить.</p>
+    </details>
+  </section>
+</div>
+
+<div class="support-back">
+  <a class="text-link" href="{{ url_for('main.index') }}">Вернуться к ленте {{ icon('arrow') }}</a>
+</div>
 {% endblock %}

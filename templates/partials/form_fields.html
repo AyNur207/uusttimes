@@ -1,0 +1,10 @@
+{% macro field_input(field, help_text='') %}
+<div class="news-field">
+  {{ field.label(class_='news-label') }}
+  {{ field(class_='news-control', aria_describedby=field.id ~ '-help', aria_invalid='true' if field.errors else 'false') }}
+  <div id="{{ field.id }}-help">
+    {% if help_text %}<p class="news-field-hint">{{ help_text }}</p>{% endif %}
+    {% for error in field.errors %}<p class="news-field-error">{{ error }}</p>{% endfor %}
+  </div>
+</div>
+{% endmacro %}

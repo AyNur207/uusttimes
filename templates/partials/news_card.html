@@ -1,0 +1,26 @@
+<article class="news-card">
+  {% if news.cover_filename %}
+  <a class="news-card-cover" href="{{ url_for('main.news_detail', news_id=news.id) }}" tabindex="-1" aria-hidden="true">
+    <img src="{{ url_for('main.news_cover', news_id=news.id) }}" alt="" loading="lazy" width="800" height="450">
+  </a>
+  {% endif %}
+  <div class="news-card-content">
+    <div class="news-card-meta">
+      {% if request.endpoint == 'main.my_news' %}
+      <span class="review-status review-status--{{ {'pending':'pending','published':'published','rejected':'rejected'}[news.status] }}">{{ {'pending':'На проверке','published':'Опубликована','rejected':'Отклонена'}[news.status] }}</span>
+      {% else %}<span>{{ news.author.email }}</span>{% endif %}
+      {% set item_date = news.published_at or news.created_at %}
+      <time datetime="{{ item_date.isoformat() }}Z">{{ item_date|ufa_time }}</time>
+    </div>
+    <h2><a href="{{ url_for('main.news_detail', news_id=news.id) }}">{{ news.title }}</a></h2>
+    <p class="news-card-excerpt">{{ news.body|truncate(240) }}</p>
+    {% if news.status == 'rejected' %}<p class="news-review-note"><strong>Причина отклонения:</strong> {{ news.reviewer_note or 'Редакция не указала причину.' }}</p>{% endif %}
+    {% if news.event_at or news.location %}
+    <div class="news-event-meta">
+      {% if news.event_at %}<span>Когда: {{ news.event_at|ufa_time }}</span>{% endif %}
+      {% if news.location %}<span>Где: {{ news.location }}</span>{% endif %}
+    </div>
+    {% endif %}
+    <a class="text-link" href="{{ url_for('main.news_detail', news_id=news.id) }}">Читать полностью {{ icon('arrow') }}</a>
+  </div>
+</article>

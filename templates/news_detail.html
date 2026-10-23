@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}{{ news.title }}{% endblock %}
+{% block description %}{{ news.body|truncate(160) }}{% endblock %}
+{% block content %}
+<article class="news-article">
+  <a class="text-link" href="{{ url_for('main.index') }}">← К ленте новостей</a>
+  <p class="eyebrow">Жизнь университета</p>
+  <h1>{{ news.title }}</h1>
+  {% if news.status != 'published' %}
+  <div class="news-preview-note"><strong>{{ 'На проверке' if news.status == 'pending' else 'Отклонена' }}</strong><p>Материал пока доступен только автору и редакции.</p>{% if news.reviewer_note %}<p>Причина отклонения: {{ news.reviewer_note }}</p>{% endif %}</div>
+  {% endif %}
+  {% set item_date = news.published_at or news.created_at %}
+  <p class="news-article-date">{{ 'Опубликовано' if news.status == 'published' else 'Отправлено' }} <time datetime="{{ item_date.isoformat() }}Z">{{ item_date|ufa_time }}</time> · время Уфы</p>
+  {% if news.cover_filename %}<img class="news-article-cover" src="{{ url_for('main.news_cover', news_id=news.id) }}" alt="Обложка новости «{{ news.title }}»">{% endif %}
+  {% if news.event_at or news.location %}
+  <dl class="news-article-event">
+    {% if news.event_at %}<div><dt>Когда</dt><dd>{{ news.event_at|ufa_time }} · Уфа</dd></div>{% endif %}
+    {% if news.location %}<div><dt>Где</dt><dd>{{ news.location }}</dd></div>{% endif %}
+  </dl>
+  {% endif %}
+  <div class="news-article-body">{{ news.body }}</div>
+  {% if news.registration_url %}
+  <a class="button" href="{{ news.registration_url }}" target="_blank" rel="noopener noreferrer">Регистрация на мероприятие {{ icon('arrow') }}<span class="visually-hidden"> (откроется в новой вкладке)</span></a>
+  {% endif %}
+</article>
+{% endblock %}

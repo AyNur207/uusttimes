@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="message-page">
+  <span class="message-icon">{{ icon('paper') }}</span>
+  <h1>{{ title }}</h1>
+  <p>{{ message }}</p>
+  <a class="button" href="{{ return_url|default(url_for('news.submit')) }}">Попробовать снова {{ icon('arrow') }}</a>
+</section>
+{% endblock %}

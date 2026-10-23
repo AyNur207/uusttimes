@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Отправить новость{% endblock %}
+{% from 'partials/form_fields.html' import field_input %}
+{% block content %}
+<section class="news-form-heading" aria-labelledby="new-news-heading">
+  <a class="text-link" href="{{ url_for('main.my_news') }}">← Мои новости</a>
+  <p class="eyebrow">Ваша история — в нашей ленте</p>
+  <h1 id="new-news-heading">Расскажите, <em>что нового.</em></h1>
+  <p>{% if current_user.is_admin %}Ваша новость появится в ленте сразу после публикации.{% else %}Редакция проверит новость перед публикацией. Статус будет доступен в «Моих новостях».{% endif %} Заголовок и текст обязательны, остальные поля — по желанию.</p>
+</section>
+<form class="news-form" method="post" enctype="multipart/form-data">
+  {{ form.hidden_tag() }}
+  {% if form.errors or form.form_errors %}
+  <div class="news-form-errors" role="alert">
+    <strong>Не удалось отправить новость.</strong>
+    <p>Проверьте отмеченные поля и отправьте форму ещё раз. Если вы выбирали обложку, прикрепите её повторно.</p>
+    {% for error in form.form_errors %}<p>{{ error }}</p>{% endfor %}
+  </div>
+  {% endif %}
+  {{ field_input(form.title, 'От 3 до 160 символов. Коротко о самом важном.') }}
+  {{ field_input(form.body, 'От 10 до 20 000 символов. Пишите обычным текстом — переносы строк сохранятся.') }}
+  {{ field_input(form.cover, 'Необязательно. JPG, PNG или WebP до 5 МБ и 20 мегапикселей.') }}
+  <fieldset class="news-event-fields">
+    <legend>Если это мероприятие</legend>
+    <div class="news-form-columns">
+      {{ field_input(form.event_at, 'Необязательно. Укажите время Уфы (UTC+5).') }}
+      {{ field_input(form.location, 'Необязательно. Корпус, аудитория или онлайн-площадка.') }}
+    </div>
+    {{ field_input(form.registration_url, 'Необязательно. Полная ссылка на форму организаторов.') }}
+  </fieldset>
+  <div class="news-form-actions">
+    {{ form.submit(class_='button') }}
+    <a class="text-link" href="{{ url_for('main.my_news') }}">Отмена</a>
+  </div>
+</form>
+{% endblock %}
