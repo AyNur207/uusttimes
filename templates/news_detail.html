@@ -6,7 +6,11 @@
   <a class="text-link" href="{{ url_for('main.index') }}">← К ленте новостей</a>
   <p class="eyebrow">Жизнь университета</p>
   <h1>{{ news.title }}</h1>
-  <p class="news-article-date">Опубликовано <time datetime="{{ news.published_at.isoformat() }}Z">{{ news.published_at|ufa_time }}</time> · время Уфы</p>
+  {% if news.status != 'published' %}
+  <div class="news-preview-note"><strong>{{ 'На проверке' if news.status == 'pending' else 'Отклонена' }}</strong><p>Материал пока доступен только автору и редакции.</p>{% if news.reviewer_note %}<p>Причина отклонения: {{ news.reviewer_note }}</p>{% endif %}</div>
+  {% endif %}
+  {% set item_date = news.published_at or news.created_at %}
+  <p class="news-article-date">{{ 'Опубликовано' if news.status == 'published' else 'Отправлено' }} <time datetime="{{ item_date.isoformat() }}Z">{{ item_date|ufa_time }}</time> · время Уфы</p>
   {% if news.cover_filename %}<img class="news-article-cover" src="{{ url_for('main.news_cover', news_id=news.id) }}" alt="Обложка новости «{{ news.title }}»">{% endif %}
   {% if news.event_at or news.location %}
   <dl class="news-article-event">

@@ -1,4 +1,4 @@
-"""Exercise publishing, persistence, browser ownership, validation and uploads."""
+"""Exercise account ownership, publishing, moderation, persistence and uploads."""
 
 from html.parser import HTMLParser
 from io import BytesIO
@@ -11,7 +11,7 @@ from PIL import Image
 from sqlalchemy.exc import SQLAlchemyError
 
 from uusttimes import create_app
-from uusttimes.models import News, db
+from uusttimes.models import News, User, db
 
 
 class FormToken(HTMLParser):
@@ -38,10 +38,24 @@ class NewsTests(TestCase):
             "TESTING": True, "SECRET_KEY": "news-test-key",
             "SQLALCHEMY_DATABASE_URI": "sqlite:///" + (root / "news.db").as_posix(),
             "UPLOAD_FOLDER": str(root / "uploads"),
+            "ADMIN_EMAIL": "", "ADMIN_PASSWORD": "",
         }
         self.apps = []
         self.app = self.make_app()
         self.client = self.app.test_client()
+        with self.app.app_context():
+            users = [User(email=email, role=role, password_hash="not-used-in-news-tests") for email, role in (
+                ("admin@example.com", "admin"), ("second@example.com", "admin"), ("member@example.com", "member"),
+            )]
+            db.session.add_all(users)
+            db.session.commit()
+            self.admin_id, self.second_id, self.member_id = [user.id for user in users]
+        self.sign_in(self.client, self.admin_id)
+
+    def sign_in(self, client, user_id):
+        with client.session_transaction() as session:
+            session["_user_id"] = str(user_id)
+            session["_fresh"] = True
 
     def make_app(self):
         app = create_app(self.config)
@@ -90,7 +104,8 @@ class NewsTests(TestCase):
         with self.app.app_context():
             news = db.session.scalar(db.select(News))
             self.assertEqual(news.status, "published")
-            self.assertNotEqual(news.author_token, "forged")
+            self.assertEqual(news.author_id, self.admin_id)
+            self.assertEqual(news.reviewer_id, self.admin_id)
             self.assertEqual(news.event_at.hour, 13)  # 18:30 Ufa -> 13:30 UTC
         for path in ("/", "/my-news", "/news/1"):
             html = self.client.get(path).get_data(as_text=True)
@@ -108,8 +123,9 @@ class NewsTests(TestCase):
         self.assertIn("Турнир по шахматам", restarted.get("/my-news").get_data(as_text=True))
         self.assertIn("Турнир по шахматам", restarted.get("/").get_data(as_text=True))
 
-    def test_my_news_is_scoped_to_each_browser(self):
+    def test_my_news_is_scoped_to_each_account(self):
         second = self.app.test_client()
+        self.sign_in(second, self.second_id)
         self.publish(title="Новость первого автора")
         self.publish(second, title="Новость второго автора")
         first_html = self.client.get("/my-news").get_data(as_text=True)
@@ -118,7 +134,7 @@ class NewsTests(TestCase):
         self.assertNotIn("Новость второго автора", first_html)
         self.assertIn("Новость второго автора", second_html)
         self.assertNotIn("Новость первого автора", second_html)
-        public = second.get("/").get_data(as_text=True)
+        public = self.app.test_client().get("/").get_data(as_text=True)
         self.assertIn("Новость первого автора", public)
         self.assertIn("Новость второго автора", public)
 
@@ -186,19 +202,121 @@ class NewsTests(TestCase):
 
     def test_feed_pagination_and_unpublished_content(self):
         self.token(self.client)
-        with self.client.session_transaction() as session:
-            author = session["author_token"]
         with self.app.app_context():
             db.session.add_all([
-                News(title=f"Материал номер {i}", body="Текст университетской новости", author_token=author)
+                News(title=f"Материал номер {i}", body="Текст университетской новости", author_id=self.admin_id, status="published")
                 for i in range(11)
             ])
-            db.session.add(News(title="Скрытый материал", body="Не для публичной ленты", author_token=author, status="pending"))
+            db.session.add(News(title="Скрытый материал", body="Не для публичной ленты", author_id=self.member_id, status="pending"))
             db.session.commit()
         first = self.client.get("/").get_data(as_text=True)
         self.assertIn("Страница 1 из 2", first)
         self.assertNotIn("Скрытый материал", first)
         self.assertIn("Материал номер 0", self.client.get("/?page=2").get_data(as_text=True))
-        self.assertEqual(self.client.get("/news/12").status_code, 404)
-        self.assertEqual(self.client.get("/news/12/cover").status_code, 404)
+        guest = self.app.test_client()
+        self.assertEqual(guest.get("/news/12").status_code, 404)
+        self.assertEqual(guest.get("/news/12/cover").status_code, 404)
         self.assertEqual(self.client.get("/news/999").status_code, 404)
+
+    def member_client(self):
+        client = self.app.test_client()
+        self.sign_in(client, self.member_id)
+        return client
+
+    def moderate(self, path, **data):
+        data["csrf_token"] = self.token(self.client)
+        return self.client.post(path, data=data)
+
+    def test_member_submission_waits_for_admin_approval(self):
+        member = self.member_client()
+        response = self.publish(member, status="published", author_id=self.admin_id, reviewer_id=self.admin_id)
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response.headers["Location"], "/my-news")
+        with self.app.app_context():
+            item = db.session.get(News, 1)
+            self.assertEqual(item.author_id, self.member_id)
+            self.assertEqual(item.status, "pending")
+            self.assertIsNone(item.published_at)
+            self.assertIsNone(item.reviewer_id)
+        guest = self.app.test_client()
+        self.assertNotIn("Турнир по шахматам", guest.get("/").get_data(as_text=True))
+        self.assertIn("На проверке", member.get("/my-news").get_data(as_text=True))
+        self.assertIn("Турнир по шахматам", self.client.get("/moderation").get_data(as_text=True))
+        self.assertEqual(self.moderate("/moderation/1/approve").status_code, 303)
+        with self.app.app_context():
+            item = db.session.get(News, 1)
+            self.assertEqual(item.status, "published")
+            self.assertEqual(item.reviewer_id, self.admin_id)
+            self.assertIsNotNone(item.published_at)
+        self.assertIn("Турнир по шахматам", guest.get("/").get_data(as_text=True))
+        self.assertEqual(guest.get("/news/1").status_code, 200)
+
+    def test_unpublished_text_and_cover_only_visible_to_author_and_admin(self):
+        member = self.member_client()
+        self.publish(member, cover=(image_file(), "cover.png"))
+        stranger = self.app.test_client()
+        # An unrelated non-admin account.
+        with self.app.app_context():
+            user = User(email="stranger@example.com", role="member", password_hash="unused")
+            db.session.add(user)
+            db.session.commit()
+            stranger_id = user.id
+        self.sign_in(stranger, stranger_id)
+        for client in (stranger, self.app.test_client()):
+            self.assertEqual(client.get("/news/1").status_code, 404)
+            self.assertEqual(client.get("/news/1/cover").status_code, 404)
+        for client in (member, self.client):
+            self.assertEqual(client.get("/news/1").status_code, 200)
+            cover = client.get("/news/1/cover")
+            self.assertEqual(cover.status_code, 200)
+            self.assertIn("no-store", cover.headers["Cache-Control"])
+            cover.close()
+        self.assertIn("private", member.get("/news/1").headers["Cache-Control"])
+
+    def test_member_cannot_moderate_or_skip_csrf(self):
+        member = self.member_client()
+        self.publish(member)
+        self.assertEqual(member.get("/moderation").status_code, 403)
+        token = self.token(member)
+        for action in ("approve", "reject"):
+            self.assertEqual(member.post(f"/moderation/1/{action}", data={"csrf_token": token, "reason": "Причина"}).status_code, 403)
+            self.assertEqual(self.client.post(f"/moderation/1/{action}", data={}).status_code, 400)
+
+    def test_rejection_requires_reason_and_is_visible_to_author(self):
+        member = self.member_client()
+        self.publish(member)
+        self.moderate("/moderation/1/reject", reason=" ")
+        with self.app.app_context():
+            self.assertEqual(db.session.get(News, 1).status, "pending")
+        self.moderate("/moderation/1/reject", reason="Уточните место проведения")
+        with self.app.app_context():
+            item = db.session.get(News, 1)
+            self.assertEqual(item.status, "rejected")
+            self.assertIsNone(item.published_at)
+        own = member.get("/my-news").get_data(as_text=True)
+        self.assertIn("Отклонена", own)
+        self.assertIn("Уточните место проведения", own)
+        self.moderate("/moderation/1/approve")
+        with self.app.app_context():
+            self.assertEqual(db.session.get(News, 1).status, "rejected")
+
+    def test_images_remain_available_without_local_cache(self):
+        self.publish(cover=(image_file(), "cover.png"))
+        for path in Path(self.config["UPLOAD_FOLDER"]).glob("*.webp"):
+            path.unlink()
+        response = self.app.test_client().get("/news/1/cover")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Image.open(BytesIO(response.data)).format, "WEBP")
+
+    def test_moderation_and_own_news_are_paginated(self):
+        with self.app.app_context():
+            db.session.add_all([
+                News(author_id=self.member_id, title=f"Заявка {i}", body="Текст заявки на модерацию", status="pending")
+                for i in range(12)
+            ])
+            db.session.commit()
+        self.assertIn("Страница 1 из 2", self.client.get("/moderation").get_data(as_text=True))
+        self.assertIn("Заявка 11", self.client.get("/moderation?page=2").get_data(as_text=True))
+        member = self.member_client()
+        self.assertIn("Страница 1 из 2", member.get("/my-news").get_data(as_text=True))
+        self.assertIn("Страница 2 из 2", member.get("/my-news?page=999").get_data(as_text=True))

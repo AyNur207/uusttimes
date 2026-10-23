@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Доступ ограничен' if code == 403 else 'Страница не найдена' }}{% endblock %}
+{% block content %}
+<section class="message-page">
+  <p class="eyebrow">{{ code }}</p>
+  <h1>{{ 'Доступ ограничен' if code == 403 else 'Страница не найдена' }}</h1>
+  <p>{{ 'Эта страница доступна только редакции.' if code == 403 else 'Возможно, материал ещё не опубликован или адрес указан неверно.' }}</p>
+  <a class="button" href="{{ url_for('main.index') }}">Вернуться к ленте {{ icon('arrow') }}</a>
+</section>
+{% endblock %}

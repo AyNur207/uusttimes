@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Модерация{% endblock %}
+{% block content %}
+<section class="my-news-intro moderation-heading" aria-labelledby="moderation-heading">
+  <p class="eyebrow">Редакторская</p>
+  <h1 id="moderation-heading">Перед <em>публикацией.</em></h1>
+  <p>Материалов на проверке: {{ pagination.total }}. Сначала показаны самые ранние заявки.</p>
+  <a class="button" href="{{ url_for('news.submit') }}">Опубликовать свою новость {{ icon('arrow') }}</a>
+</section>
+<div class="moderation-list">
+  {% for news in pagination.items %}
+  <article class="moderation-item">
+    <div class="news-card-meta"><span>{{ news.author.email }}</span><time datetime="{{ news.created_at.isoformat() }}Z">{{ news.created_at|ufa_time }}</time></div>
+    <h2><a href="{{ url_for('main.news_detail', news_id=news.id) }}">{{ news.title }}</a></h2>
+    <p class="news-card-excerpt">{{ news.body|truncate(300) }}</p>
+    <a class="text-link" href="{{ url_for('main.news_detail', news_id=news.id) }}">Просмотреть целиком {{ icon('arrow') }}</a>
+    <div class="moderation-actions">
+      <form method="post" action="{{ url_for('news.approve', item_id=news.id, page=pagination.page) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="button" type="submit">Опубликовать</button>
+      </form>
+      <details class="moderation-reject">
+        <summary>Отклонить с причиной</summary>
+        <form method="post" action="{{ url_for('news.reject', item_id=news.id, page=pagination.page) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label class="news-label" for="reason-{{ news.id }}">Что нужно исправить?</label>
+          <textarea class="news-control" id="reason-{{ news.id }}" name="reason" rows="3" minlength="3" maxlength="2000" required></textarea>
+          <button class="button button--danger" type="submit">Отклонить</button>
+        </form>
+      </details>
+    </div>
+  </article>
+  {% else %}
+  <div class="moderation-empty"><h2>Все материалы проверены.</h2><p>Новые заявки появятся здесь после отправки авторами.</p></div>
+  {% endfor %}
+  {% include 'partials/pagination.html' %}
+</div>
+{% endblock %}

@@ -22,6 +22,7 @@ class SupportTests(unittest.TestCase):
         app = create_app({
             "TESTING": True, "DONATION_URL": url,
             "SECRET_KEY": "test-only-key", "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "ADMIN_EMAIL": "", "ADMIN_PASSWORD": "",
         })
         response = app.test_client().get("/support")
         self.assertEqual(response.status_code, 200)

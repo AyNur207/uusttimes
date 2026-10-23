@@ -3,12 +3,48 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from urllib.parse import urlsplit
-from wtforms import DateTimeLocalField, StringField, SubmitField, TextAreaField
-from wtforms.validators import DataRequired, Length, Optional, URL, ValidationError
+from wtforms import DateTimeLocalField, PasswordField, StringField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, URL, ValidationError
 
 
 def strip_text(value):
     return value.strip() if isinstance(value, str) else value
+
+
+def normalize_email(value):
+    return value.strip().lower() if isinstance(value, str) else value
+
+
+class LoginForm(FlaskForm):
+    email = StringField("Email", filters=[normalize_email], validators=[
+        DataRequired(message="Укажите email."),
+        Length(max=255, message="Email слишком длинный."),
+        Email(message="Введите корректный email."),
+    ], render_kw={"autocomplete": "email", "placeholder": "student@example.com"})
+    password = PasswordField("Пароль", validators=[
+        DataRequired(message="Введите пароль."),
+        Length(max=256, message="Пароль слишком длинный."),
+    ], render_kw={"autocomplete": "current-password"})
+    submit = SubmitField("Войти")
+
+
+class RegisterForm(LoginForm):
+    password = PasswordField("Пароль", validators=[
+        DataRequired(message="Придумайте пароль."),
+        Length(min=8, max=256, message="Пароль должен содержать от 8 до 256 символов."),
+    ], render_kw={"autocomplete": "new-password"})
+    password2 = PasswordField("Повторите пароль", validators=[
+        DataRequired(message="Повторите пароль."),
+        EqualTo("password", message="Пароли не совпадают."),
+    ], render_kw={"autocomplete": "new-password"})
+    submit = SubmitField("Создать аккаунт")
+
+
+class RejectForm(FlaskForm):
+    reason = TextAreaField("Причина отклонения", filters=[strip_text], validators=[
+        DataRequired(message="Укажите причину отклонения."),
+        Length(min=3, max=2000, message="Причина должна содержать от 3 до 2000 символов."),
+    ])
 
 
 class NewsForm(FlaskForm):

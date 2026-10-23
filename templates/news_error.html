@@ -5,6 +5,6 @@
   <span class="message-icon">{{ icon('paper') }}</span>
   <h1>{{ title }}</h1>
   <p>{{ message }}</p>
-  <a class="button" href="{{ url_for('main.new_news') }}">Открыть форму заново {{ icon('arrow') }}</a>
+  <a class="button" href="{{ return_url|default(url_for('news.submit')) }}">Попробовать снова {{ icon('arrow') }}</a>
 </section>
 {% endblock %}

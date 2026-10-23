@@ -8,6 +8,9 @@
 .edition-label { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); text-decoration: none; letter-spacing: .03em; }
 .edition-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--purple); }
 .header-actions { display: flex; align-items: center; gap: 21px; }
+.header-user { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.logout-form { margin: 0; }
+.logout-form button { padding: 6px 0; border: 0; background: none; color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
 .support-link, .login-link { text-decoration: none; font-weight: 600; }
 .support-link { display: flex; align-items: center; gap: 8px; color: var(--purple); }
 .support-link .icon { width: 15px; height: 15px; }
@@ -52,6 +55,7 @@
 .notice { padding: 14px 18px; background: var(--purple-wash); border-left: 3px solid var(--purple); }
 @media (max-width: 1000px) { .edition-label { font-size: 11px; } .header-actions { gap: 14px; } .brand-wordmark { letter-spacing: -1.7px; } .brand-mark { width: 36px; height: 36px; } .masthead { gap: 12px; } }
 @media (max-width: 760px) {
+  .header-actions { flex-wrap: wrap; }
   .utility-bar { flex-wrap: wrap; justify-content: center; gap: 8px; padding-block: 12px; }
   .edition-label { width: 100%; justify-content: center; }
   .header-actions { justify-content: center; gap: 14px; }
@@ -66,6 +70,7 @@
   .footer-top p { order: 3; width: 100%; }
   .footer-bottom { flex-wrap: wrap; }
 }
+@media (max-width: 1000px) { .navigation-caption { display: none; } .header-user { max-width: 150px; } }
 @media (max-width: 400px) {
   .header-actions { flex-wrap: wrap; gap: 12px 20px; }
   .support-link { width: 100%; justify-content: center; }

@@ -15,6 +15,7 @@ class ConfigTests(TestCase):
         config = {
             "TESTING": True, "SECRET_KEY": "test-only-key",
             "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "ADMIN_EMAIL": "", "ADMIN_PASSWORD": "",
         }
         config.update(overrides or {})
         with patch("uusttimes.__file__", str(root / "uusttimes" / "__init__.py")):

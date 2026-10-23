@@ -1,27 +1,18 @@
 {% extends 'base.html' %}
 {% block title %}Отправить новость{% endblock %}
-{% macro field_input(field, help_text='') %}
-<div class="news-field">
-  {{ field.label(class_='news-label') }}
-  {{ field(class_='news-control', aria_describedby=field.id ~ '-help', aria_invalid='true' if field.errors else 'false') }}
-  <div id="{{ field.id }}-help">
-    {% if help_text %}<p class="news-field-hint">{{ help_text }}</p>{% endif %}
-    {% for error in field.errors %}<p class="news-field-error">{{ error }}</p>{% endfor %}
-  </div>
-</div>
-{% endmacro %}
+{% from 'partials/form_fields.html' import field_input %}
 {% block content %}
 <section class="news-form-heading" aria-labelledby="new-news-heading">
   <a class="text-link" href="{{ url_for('main.my_news') }}">← Мои новости</a>
   <p class="eyebrow">Ваша история — в нашей ленте</p>
   <h1 id="new-news-heading">Расскажите, <em>что нового.</em></h1>
-  <p>Сейчас новость появляется в ленте сразу после отправки. Заголовок и текст обязательны, остальные поля — по желанию.</p>
+  <p>{% if current_user.is_admin %}Ваша новость появится в ленте сразу после публикации.{% else %}Редакция проверит новость перед публикацией. Статус будет доступен в «Моих новостях».{% endif %} Заголовок и текст обязательны, остальные поля — по желанию.</p>
 </section>
 <form class="news-form" method="post" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
   {% if form.errors or form.form_errors %}
   <div class="news-form-errors" role="alert">
-    <strong>Не удалось опубликовать новость.</strong>
+    <strong>Не удалось отправить новость.</strong>
     <p>Проверьте отмеченные поля и отправьте форму ещё раз. Если вы выбирали обложку, прикрепите её повторно.</p>
     {% for error in form.form_errors %}<p>{{ error }}</p>{% endfor %}
   </div>

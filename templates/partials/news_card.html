@@ -5,9 +5,16 @@
   </a>
   {% endif %}
   <div class="news-card-content">
-    <div class="news-card-meta"><span>Университет</span><time datetime="{{ news.published_at.isoformat() }}Z">{{ news.published_at|ufa_time }}</time></div>
+    <div class="news-card-meta">
+      {% if request.endpoint == 'main.my_news' %}
+      <span class="review-status review-status--{{ {'pending':'pending','published':'published','rejected':'rejected'}[news.status] }}">{{ {'pending':'На проверке','published':'Опубликована','rejected':'Отклонена'}[news.status] }}</span>
+      {% else %}<span>{{ news.author.email }}</span>{% endif %}
+      {% set item_date = news.published_at or news.created_at %}
+      <time datetime="{{ item_date.isoformat() }}Z">{{ item_date|ufa_time }}</time>
+    </div>
     <h2><a href="{{ url_for('main.news_detail', news_id=news.id) }}">{{ news.title }}</a></h2>
     <p class="news-card-excerpt">{{ news.body|truncate(240) }}</p>
+    {% if news.status == 'rejected' %}<p class="news-review-note"><strong>Причина отклонения:</strong> {{ news.reviewer_note or 'Редакция не указала причину.' }}</p>{% endif %}
     {% if news.event_at or news.location %}
     <div class="news-event-meta">
       {% if news.event_at %}<span>Когда: {{ news.event_at|ufa_time }}</span>{% endif %}

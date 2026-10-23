@@ -6,13 +6,31 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
+import click
 from dotenv import dotenv_values
-from flask import Flask
+from flask import Flask, request, url_for
+from flask_login import LoginManager
 from flask_wtf.csrf import CSRFError, CSRFProtect
+from email_validator import EmailNotValidError, validate_email
+from sqlalchemy.exc import IntegrityError
 
-from .models import db
+from .models import User, db
+from .schema import initialize_database
 
 csrf = CSRFProtect()
+login_manager = LoginManager()
+login_manager.login_view = "auth.login"
+login_manager.login_message = "Войдите, чтобы продолжить."
+login_manager.login_message_category = "error"
+
+
+def _database_uri(value):
+    if not value:
+        return "sqlite:///uusttimes.sqlite3"
+    for prefix in ("postgres://", "postgresql://"):
+        if value.startswith(prefix):
+            return "postgresql+psycopg://" + value[len(prefix):]
+    return value
 
 
 def _local_secret_key(instance_path):
@@ -54,6 +72,8 @@ def _get_donation_url(value):
 def create_app(test_config=None):
     root = Path(__file__).resolve().parent.parent
     file_config = dotenv_values(root / ".env", encoding="utf-8-sig")
+    def setting(name, default=None):
+        return os.environ.get(name, file_config.get(name, default))
     app = Flask(
         __name__,
         static_folder=str(root / "static"),
@@ -62,11 +82,13 @@ def create_app(test_config=None):
         instance_relative_config=True,
     )
     app.config.from_mapping(
-        SECRET_KEY=os.environ.get("SECRET_KEY", file_config.get("SECRET_KEY")),
-        DONATION_URL=os.environ.get("DONATION_URL", file_config.get("DONATION_URL", "")),
-        SQLALCHEMY_DATABASE_URI="sqlite:///uusttimes.db",
+        SECRET_KEY=setting("SECRET_KEY"),
+        DONATION_URL=setting("DONATION_URL", ""),
+        SQLALCHEMY_DATABASE_URI=_database_uri(setting("DATABASE_URL")),
+        ADMIN_EMAIL=setting("ADMIN_EMAIL", ""),
+        ADMIN_PASSWORD=setting("ADMIN_PASSWORD", ""),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        UPLOAD_FOLDER=str(root / "instance" / "uploads"),
+        UPLOAD_FOLDER=setting("UPLOAD_FOLDER") or str(root / "instance" / "uploads"),
         MAX_CONTENT_LENGTH=6 * 1024 * 1024,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
@@ -80,12 +102,64 @@ def create_app(test_config=None):
     app.config["DONATION_URL"] = _get_donation_url(app.config["DONATION_URL"])
     db.init_app(app)
     csrf.init_app(app)
+    login_manager.init_app(app)
     with app.app_context():
-        db.create_all()
+        initialize_database()
+        admin_email = (app.config["ADMIN_EMAIL"] or "").strip().lower()
+        admin_password = app.config["ADMIN_PASSWORD"] or ""
+        if admin_email and admin_password:
+            try:
+                validate_email(admin_email, check_deliverability=False)
+            except EmailNotValidError as error:
+                raise ValueError("ADMIN_EMAIL должен содержать корректный email.") from None
+            if not 8 <= len(admin_password) <= 256:
+                raise ValueError("ADMIN_PASSWORD должен содержать от 8 до 256 символов.")
+            if not db.session.scalar(db.select(User).where(User.email == admin_email)):
+                user = User(email=admin_email, role="admin")
+                user.set_password(admin_password)
+                db.session.add(user)
+                try:
+                    db.session.commit()
+                except IntegrityError:
+                    db.session.rollback()
+                    if not db.session.scalar(db.select(User).where(User.email == admin_email)):
+                        raise
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        try:
+            return db.session.get(User, int(user_id))
+        except (ValueError, TypeError):
+            return None
+
+    @app.cli.command("create-admin")
+    @click.argument("email")
+    def create_admin(email):
+        email = email.strip().lower()
+        try:
+            validate_email(email, check_deliverability=False)
+        except EmailNotValidError:
+            raise click.ClickException("Введите корректный email.") from None
+        user = db.session.scalar(db.select(User).where(User.email == email))
+        if user is None:
+            password = click.prompt("Пароль", hide_input=True, confirmation_prompt=True)
+            if not 8 <= len(password) <= 256:
+                raise click.ClickException("Пароль должен содержать от 8 до 256 символов.")
+            user = User(email=email, role="admin")
+            user.set_password(password)
+            db.session.add(user)
+        else:
+            user.role = "admin"
+        db.session.commit()
+        click.echo(f"Права администратора назначены: {email}")
 
     from .routes import main
+    from .auth import auth_bp
+    from .news import news_bp
 
     app.register_blueprint(main)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(news_bp)
 
     @app.template_filter("ufa_time")
     def ufa_time(value):
@@ -109,7 +183,15 @@ def create_app(test_config=None):
         return render_template(
             "news_error.html", title="Обновите форму",
             message="Не удалось подтвердить отправку. Откройте форму заново и повторите попытку.",
+            return_url=url_for("auth.login" if request.endpoint and request.endpoint.startswith("auth.") else "news.submit"),
         ), 400
+
+    @app.errorhandler(403)
+    @app.errorhandler(404)
+    def unavailable_page(error):
+        from flask import render_template
+
+        return render_template("error.html", code=error.code), error.code
 
     @app.context_processor
     def publication_context():

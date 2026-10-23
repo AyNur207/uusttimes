@@ -1,32 +1,12 @@
-"""Public news publishing without registration or moderation for the prototype."""
+"""Public feed and account-scoped news, with protected unpublished previews."""
 
-import secrets
-from datetime import timedelta, timezone
-from pathlib import Path
+from flask import Blueprint, Response, abort, current_app, render_template, send_from_directory
+from flask_login import current_user, login_required
 
-from flask import (
-    Blueprint, current_app, flash, redirect, render_template, request,
-    send_from_directory, session, url_for,
-)
-from sqlalchemy.exc import SQLAlchemyError
-
-from .forms import NewsForm
-from .models import News, db, utc_now
-from .uploads import InvalidCover, save_cover
+from .models import News, db
+from .pagination import news_page
 
 main = Blueprint("main", __name__)
-
-
-def anonymous_author():
-    if "author_token" not in session:
-        session["author_token"] = secrets.token_urlsafe(32)
-    session.permanent = True
-    return session["author_token"]
-
-
-def news_page(statement):
-    page = max(1, request.args.get("page", 1, type=int))
-    return db.paginate(statement, page=page, per_page=10, error_out=False)
 
 
 @main.get("/")
@@ -39,89 +19,46 @@ def index():
 
 
 @main.get("/my-news")
+@login_required
 def my_news():
     pagination = news_page(
-        db.select(News).where(News.author_token == anonymous_author())
+        db.select(News).where(News.author_id == current_user.id)
         .order_by(News.created_at.desc(), News.id.desc())
     )
     return render_template("my_news.html", pagination=pagination)
 
 
-@main.route("/news/new", methods=["GET", "POST"])
-def new_news():
-    author_token = anonymous_author()
-    form = NewsForm()
-    if form.validate_on_submit():
-        cover_filename = None
-        if form.cover.data:
-            try:
-                cover_filename = save_cover(form.cover.data)
-            except InvalidCover as error:
-                form.cover.errors.append(str(error))
-                return render_template("new_news.html", form=form), 400
-        event_at = form.event_at.data
-        if event_at:
-            event_at = event_at.replace(
-                tzinfo=timezone(timedelta(hours=5))
-            ).astimezone(timezone.utc).replace(tzinfo=None)
-        now = utc_now()
-        news = News(
-            author_token=author_token, title=form.title.data, body=form.body.data,
-            cover_filename=cover_filename, event_at=event_at,
-            location=form.location.data or None,
-            registration_url=form.registration_url.data or None,
-            status="published", created_at=now, published_at=now,
-        )
-        try:
-            db.session.add(news)
-            db.session.commit()
-        except SQLAlchemyError:
-            db.session.rollback()
-            if cover_filename:
-                (Path(current_app.config["UPLOAD_FOLDER"]) / cover_filename).unlink(missing_ok=True)
-            current_app.logger.exception("Failed to save submitted news")
-            form.form_errors.append("Не удалось сохранить новость. Попробуйте ещё раз.")
-            return render_template("new_news.html", form=form), 500
-        flash("Новость опубликована и появилась в общей ленте.", "success")
-        return redirect(url_for("main.index"), code=303)
-    return render_template("new_news.html", form=form), (400 if request.method == "POST" else 200)
+def visible_news(news_id):
+    item = db.get_or_404(News, news_id)
+    if item.status != "published" and not (
+        current_user.is_authenticated and (current_user.is_admin or item.author_id == current_user.id)
+    ):
+        abort(404)
+    return item
 
 
 @main.get("/news/<int:news_id>")
 def news_detail(news_id):
-    news = db.first_or_404(db.select(News).where(News.id == news_id, News.status == "published"))
-    return render_template("news_detail.html", news=news)
+    item = visible_news(news_id)
+    response = Response(render_template("news_detail.html", news=item))
+    if item.status != "published":
+        response.headers["Cache-Control"] = "private, no-store"
+    return response
 
 
 @main.get("/news/<int:news_id>/cover")
 def news_cover(news_id):
-    news = db.first_or_404(db.select(News).where(News.id == news_id, News.status == "published"))
-    if not news.cover_filename:
-        from flask import abort
-
+    item = visible_news(news_id)
+    if not item.cover_filename:
         abort(404)
-    return send_from_directory(
-        current_app.config["UPLOAD_FOLDER"], news.cover_filename,
-        mimetype="image/webp", max_age=86400,
-    )
-
-
-@main.get("/login")
-def login():
-    return render_template(
-        "account.html", mode="login", title="Вход",
-        heading="С возвращением в Times.",
-        description="Вход в личный кабинет скоро появится. А пока читайте ленту — она открыта для всех.",
-    )
-
-
-@main.get("/register")
-def register():
-    return render_template(
-        "account.html", mode="register", title="Регистрация",
-        heading="Станьте частью редакции.",
-        description="Регистрация скоро откроется. Вы сможете предлагать новости и рассказывать о жизни университета.",
-    )
+    if item.cover_data:
+        response = Response(item.cover_data, mimetype="image/webp")
+    else:
+        response = send_from_directory(
+            current_app.config["UPLOAD_FOLDER"], item.cover_filename, mimetype="image/webp",
+        )
+    response.headers["Cache-Control"] = "public, max-age=86400" if item.status == "published" else "private, no-store"
+    return response
 
 
 @main.get("/support")
