@@ -5,6 +5,7 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+import re
 
 from PIL import Image
 
@@ -178,3 +179,31 @@ class ContentTests(TestCase):
         updated = runner.invoke(args=["import-news", "--update"])
         self.assertEqual(updated.exit_code, 0, updated.output)
         self.assertIn("Обновлено: 11", updated.output)
+
+    def test_deleted_seed_is_not_restored_by_restart_or_explicit_update(self):
+        with self.app.app_context():
+            import_news(CONTENT, STATIC)
+            admin = User(email="admin@example.org", role="admin", password_hash="unused")
+            db.session.add(admin)
+            db.session.commit()
+            admin_id = admin.id
+            news_id = db.session.scalar(db.select(News.id).where(News.seed_key == "news-011"))
+        client = self.app.test_client()
+        with client.session_transaction() as session:
+            session["_user_id"] = str(admin_id)
+            session["_fresh"] = True
+        detail = client.get(f"/news/{news_id}").get_data(as_text=True)
+        token = re.search(r'name="csrf_token"[^>]*value="([^"]+)"', detail).group(1)
+        result = client.post(f"/news/{news_id}/delete", data={"csrf_token": token, "confirm": "yes"})
+        self.assertEqual(result.status_code, 303)
+        with self.app.app_context():
+            self.assertEqual(import_news(CONTENT, STATIC), (0, 0))
+            self.assertEqual(import_news(CONTENT, STATIC, update=True), (0, 10))
+            item = db.session.get(News, news_id)
+            self.assertEqual((item.status, item.seed_key, item.body), ("deleted", "news-011", ""))
+            self.assertIsNone(item.cover_data)
+        restarted = self.make_app(SEED_NEWS=True)
+        self.assertEqual(restarted.test_client().get(f"/news/{news_id}").status_code, 404)
+        with restarted.app_context():
+            self.assertEqual(db.session.scalar(db.select(db.func.count()).select_from(News).where(News.status == "published")), 10)
+            self.assertEqual(db.session.get(News, news_id).status, "deleted")

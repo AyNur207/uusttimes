@@ -26,5 +26,16 @@
   <a class="button" href="{{ news.registration_url }}" target="_blank" rel="noopener noreferrer">Регистрация на мероприятие {{ icon('arrow') }}<span class="visually-hidden"> (откроется в новой вкладке)</span></a>
   {% endif %}
   {% include 'partials/reactions.html' %}
+  {% if current_user.is_authenticated and current_user.is_admin and news.status == 'published' %}
+  <details class="news-delete" id="delete-news">
+    <summary>Удалить новость</summary>
+    <form method="post" action="{{ url_for('news.delete_news', news_id=news.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <p>Новость исчезнет с сайта. Её текст, обложка и все реакции будут удалены. Восстановить материал через сайт будет нельзя.</p>
+      <label class="news-delete-confirm"><input type="checkbox" name="confirm" value="yes" required> Подтверждаю удаление новости «{{ news.title }}»</label>
+      <button class="button button--danger" type="submit">Подтвердить удаление</button>
+    </form>
+  </details>
+  {% endif %}
 </article>
 {% endblock %}

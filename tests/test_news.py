@@ -11,7 +11,7 @@ from PIL import Image
 from sqlalchemy.exc import SQLAlchemyError
 
 from uusttimes import create_app
-from uusttimes.models import News, User, db
+from uusttimes.models import News, NewsReaction, User, db
 
 
 class FormToken(HTMLParser):
@@ -332,3 +332,138 @@ class NewsTests(TestCase):
         member = self.member_client()
         self.assertIn("Страница 1 из 2", member.get("/my-news").get_data(as_text=True))
         self.assertIn("Страница 2 из 2", member.get("/my-news?page=999").get_data(as_text=True))
+
+    def delete(self, news_id=1, client=None, **fields):
+        client = client or self.client
+        return client.post(f"/news/{news_id}/delete", data={
+            "csrf_token": self.token(client), "confirm": "yes", **fields,
+        })
+
+    def test_admin_deletes_another_authors_publication_cover_and_reactions(self):
+        self.publish(cover=(image_file(), "cover.png"), location="Уфа", event_at="2026-10-25T18:30",
+                     registration_url="https://example.org/register")
+        self.publish(title="Другая новость")
+        with self.app.app_context():
+            item = db.session.get(News, 1)
+            filename = item.cover_filename
+            db.session.add_all([
+                NewsReaction(news_id=1, user_id=self.member_id, kind="love"),
+                NewsReaction(news_id=2, user_id=self.member_id, kind="like"),
+            ])
+            db.session.commit()
+        second_admin = self.app.test_client()
+        self.sign_in(second_admin, self.second_id)
+        response = self.delete(client=second_admin)
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response.location, "/")
+        with self.app.app_context():
+            item = db.session.get(News, 1)
+            self.assertEqual(item.status, "deleted")
+            self.assertEqual((item.title, item.body), ("", ""))
+            self.assertIsNone(item.cover_data)
+            self.assertIsNone(item.cover_filename)
+            self.assertIsNone(item.event_at)
+            self.assertIsNone(item.location)
+            self.assertIsNone(item.registration_url)
+            self.assertEqual(db.session.get(News, 2).title, "Другая новость")
+            reactions = list(db.session.scalars(db.select(NewsReaction)))
+            self.assertEqual([(row.news_id, row.kind) for row in reactions], [(2, "like")])
+            self.assertIsNotNone(db.session.get(User, self.admin_id))
+        self.assertFalse((Path(self.config["UPLOAD_FOLDER"]) / filename).exists())
+        for client in (self.client, second_admin, self.app.test_client()):
+            self.assertEqual(client.get("/news/1").status_code, 404)
+            self.assertEqual(client.get("/news/1/cover").status_code, 404)
+            self.assertNotIn("Турнир по шахматам", client.get("/").get_data(as_text=True))
+        self.assertNotIn("Турнир по шахматам", self.client.get("/my-news").get_data(as_text=True))
+        self.assertEqual(self.delete().status_code, 404)
+        self.publish(title="Новая новость после удаления")
+        self.assertEqual(self.client.get("/news/1").status_code, 404)
+
+    def test_delete_control_visible_only_to_admin_on_published_news(self):
+        self.publish()
+        member = self.member_client()
+        self.publish(member)
+        for client in (member, self.app.test_client()):
+            self.assertNotIn('id="delete-news"', client.get("/news/1").get_data(as_text=True))
+        self.assertIn('id="delete-news"', self.client.get("/news/1").get_data(as_text=True))
+        self.assertNotIn('id="delete-news"', self.client.get("/news/2").get_data(as_text=True))
+
+    def test_delete_requires_admin_post_csrf_and_explicit_confirmation(self):
+        self.publish()
+        self.assertEqual(self.client.get("/news/1/delete").status_code, 405)
+        self.assertEqual(self.client.post("/news/1/delete", data={"confirm": "yes"}).status_code, 400)
+        self.assertEqual(self.delete(confirm="").status_code, 303)
+        member = self.member_client()
+        self.assertEqual(self.delete(client=member).status_code, 403)
+        guest = self.app.test_client()
+        token = self.token(self.client)
+        # A separate guest token, not an administrator's token.
+        parser = FormToken()
+        parser.feed(guest.get("/login").get_data(as_text=True))
+        result = guest.post("/news/1/delete", data={"csrf_token": parser.value, "confirm": "yes"})
+        self.assertEqual(result.status_code, 302)
+        self.assertIn("/login", result.location)
+        with self.app.app_context():
+            self.assertEqual(db.session.get(News, 1).status, "published")
+
+    def test_delete_rejects_pending_rejected_and_missing_items(self):
+        member = self.member_client()
+        self.publish(member)
+        self.publish(member)
+        self.moderate("/moderation/2/reject", reason="Требует уточнения")
+        for news_id in (1, 2, 999):
+            self.assertEqual(self.delete(news_id).status_code, 404)
+        with self.app.app_context():
+            self.assertEqual(db.session.get(News, 1).status, "pending")
+            self.assertEqual(db.session.get(News, 2).status, "rejected")
+
+    def test_delete_database_failure_preserves_article_reaction_and_cache(self):
+        self.publish(cover=(image_file(), "cover.png"))
+        with self.app.app_context():
+            filename = db.session.get(News, 1).cover_filename
+            db.session.add(NewsReaction(news_id=1, user_id=self.member_id, kind="fire"))
+            db.session.commit()
+        with patch.object(db.session, "commit", side_effect=SQLAlchemyError("test failure")):
+            with self.assertLogs(self.app.logger, level="ERROR"):
+                response = self.delete()
+        self.assertEqual(response.location, "/news/1")
+        with self.app.app_context():
+            item = db.session.get(News, 1)
+            self.assertEqual(item.status, "published")
+            self.assertEqual(item.title, "Турнир по шахматам")
+            self.assertTrue(item.cover_data)
+            self.assertIsNotNone(db.session.get(NewsReaction, (1, self.member_id)))
+        self.assertTrue((Path(self.config["UPLOAD_FOLDER"]) / filename).exists())
+
+    def test_delete_keeps_cache_shared_by_another_article(self):
+        self.publish(cover=(image_file(), "cover.png"))
+        self.publish(title="Другая новость")
+        with self.app.app_context():
+            first = db.session.get(News, 1)
+            second = db.session.get(News, 2)
+            second.cover_filename = first.cover_filename
+            second.cover_data = first.cover_data
+            filename = first.cover_filename
+            db.session.commit()
+        self.assertEqual(self.delete().status_code, 303)
+        self.assertTrue((Path(self.config["UPLOAD_FOLDER"]) / filename).exists())
+        self.assertEqual(self.client.get("/news/2/cover").status_code, 200)
+
+    def test_delete_never_removes_files_outside_upload_directory(self):
+        self.publish()
+        uploads = Path(self.config["UPLOAD_FOLDER"])
+        uploads.mkdir()
+        marker = uploads.parent / "keep.txt"
+        marker.write_text("Keep this file", encoding="utf-8")
+        with self.app.app_context():
+            db.session.get(News, 1).cover_filename = "../keep.txt"
+            db.session.commit()
+        self.assertEqual(self.delete().status_code, 303)
+        self.assertEqual(marker.read_text(encoding="utf-8"), "Keep this file")
+
+    def test_cache_cleanup_failure_does_not_resurrect_deleted_article(self):
+        self.publish(cover=(image_file(), "cover.png"))
+        with patch.object(Path, "unlink", side_effect=OSError("test cleanup failure")):
+            with self.assertLogs(self.app.logger, level="WARNING"):
+                self.assertEqual(self.delete().status_code, 303)
+        self.assertEqual(self.client.get("/news/1").status_code, 404)

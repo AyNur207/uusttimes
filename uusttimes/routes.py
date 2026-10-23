@@ -31,7 +31,7 @@ def index():
 @login_required
 def my_news():
     pagination = news_page(
-        db.select(News).where(News.author_id == current_user.id)
+        db.select(News).where(News.author_id == current_user.id, News.status != "deleted")
         .order_by(News.created_at.desc(), News.id.desc())
     )
     return render_template("my_news.html", pagination=pagination, **reaction_context(pagination.items))
@@ -39,6 +39,8 @@ def my_news():
 
 def visible_news(news_id):
     item = db.get_or_404(News, news_id)
+    if item.status == "deleted":
+        abort(404)
     if item.status != "published" and not (
         current_user.is_authenticated and (current_user.is_admin or item.author_id == current_user.id)
     ):

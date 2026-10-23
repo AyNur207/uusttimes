@@ -90,6 +90,8 @@ def import_news(path, static_root, update=False, _retry=True):
             values = dict(record)
             image = values.pop("image")
             item = existing.get(values["seed_key"])
+            if item is not None and item.status == "deleted":
+                continue
             if item is not None and not update:
                 continue
             cover = encode_cover(image.read_bytes()) if image else None

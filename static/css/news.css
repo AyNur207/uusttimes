@@ -68,6 +68,13 @@ textarea.news-control { resize: vertical; line-height: 1.7; }
 .moderation-reject button { margin-top: 12px; }
 .button--danger { background: #a32032; border-color: #a32032; }
 .button--danger:hover { background: #821729; border-color: #821729; }
+.news-delete { margin-top: 32px; padding: 20px; border: 1px solid #edc9cf; border-radius: 4px; }
+.news-delete summary { color: #a32032; font-size: 14px; font-weight: 600; cursor: pointer; }
+.news-delete form { padding-top: 18px; }
+.news-delete p { font-size: 14px; color: var(--muted); }
+.news-delete-confirm { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; font-size: 14px; overflow-wrap: anywhere; }
+.news-delete-confirm input { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 3px; accent-color: #a32032; }
+.news-delete button { font: inherit; font-size: 13px; cursor: pointer; }
 .moderation-empty { padding-block: 40px; color: var(--muted); }
 @media (max-width: 600px) {
   .news-card-content { padding: 20px; }

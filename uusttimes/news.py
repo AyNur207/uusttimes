@@ -9,7 +9,7 @@ from flask_login import current_user, login_required
 from sqlalchemy.exc import SQLAlchemyError
 
 from .forms import NewsForm, RejectForm
-from .models import News, db, utc_now
+from .models import News, NewsReaction, db, utc_now
 from .pagination import news_page
 from .uploads import InvalidCover, save_cover
 
@@ -124,3 +124,49 @@ def reject(item_id):
     db.session.commit()
     flash("Новость отклонена. Причина доступна автору.", "success")
     return moderation_redirect()
+
+
+@news_bp.post("/news/<int:news_id>/delete")
+@admin_required
+def delete_news(news_id):
+    item = db.session.scalar(
+        db.select(News).where(News.id == news_id, News.status == "published").with_for_update()
+    )
+    if item is None:
+        abort(404)
+    if request.form.get("confirm") != "yes":
+        flash("Подтвердите удаление новости.", "error")
+        return redirect(url_for("main.news_detail", news_id=news_id), code=303)
+    cover_filename = item.cover_filename
+    try:
+        db.session.execute(db.delete(NewsReaction).where(NewsReaction.news_id == news_id))
+        # Retain the ID and seed key so old links cannot point to a new article
+        # and startup imports cannot resurrect an administrator's deletion.
+        item.status = "deleted"
+        item.title = ""
+        item.body = ""
+        item.cover_data = None
+        item.cover_filename = None
+        item.external_url = None
+        item.registration_url = None
+        item.event_at = None
+        item.location = None
+        item.reviewer_note = None
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        current_app.logger.error("Не удалось удалить новость из БД.")
+        flash("Не удалось удалить новость. Попробуйте ещё раз.", "error")
+        return redirect(url_for("main.news_detail", news_id=news_id), code=303)
+    if cover_filename:
+        directory = Path(current_app.config["UPLOAD_FOLDER"]).resolve()
+        cover_path = (directory / cover_filename).resolve()
+        shared = db.session.scalar(db.select(News.id).where(News.cover_filename == cover_filename).limit(1))
+        if cover_path.parent == directory and not shared:
+            try:
+                cover_path.unlink(missing_ok=True)
+            except OSError:
+                # The DB copy is already removed; cache cleanup must not undo deletion.
+                current_app.logger.warning("Не удалось очистить локальный кеш обложки удалённой новости.")
+    flash("Новость удалена.", "success")
+    return redirect(url_for("main.index"), code=303)
