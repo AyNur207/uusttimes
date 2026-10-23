@@ -6,6 +6,10 @@
 .intro-description { max-width: 525px; color: var(--muted); font-size: 14px; line-height: 1.85; margin-bottom: 0; }
 .intro-submit { margin-top: 23px; }
 .news-feed { min-width: 0; }
+.news-categories { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 20px; }
+.news-category-filter { display: inline-flex; align-items: center; min-height: 42px; padding: 8px 16px; border: 1px solid var(--line); border-radius: 24px; font-size: 13px; text-decoration: none; }
+.news-category-filter:hover { border-color: var(--purple); color: var(--purple); }
+.news-category-filter.is-active { background: var(--purple); border-color: var(--purple); color: white; }
 .intro-seal { flex: 0 0 144px; width: 144px; height: 144px; margin-right: 48px; border: 1px solid #c9bedc; outline: 1px solid #c9bedc; outline-offset: -8px; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; color: var(--purple); transform: rotate(-12deg); }
 .intro-seal span { font-size: 8px; letter-spacing: .18em; }
 .intro-seal strong { font: italic 31px var(--serif); }

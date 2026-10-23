@@ -4,8 +4,11 @@ from datetime import datetime, timezone
 
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Index
+from sqlalchemy import CheckConstraint, Index
 from werkzeug.security import check_password_hash, generate_password_hash
+
+from .categories import CATEGORIES
+from .reaction_types import REACTIONS
 
 db = SQLAlchemy()
 
@@ -40,6 +43,8 @@ class News(db.Model):
     __table_args__ = (
         Index("ix_news_items_feed", "status", "published_at"),
         Index("ix_news_items_author", "author_id", "created_at"),
+        Index("ix_news_items_seed_key", "seed_key", unique=True),
+        Index("ix_news_items_category_feed", "category", "status", "published_at"),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -47,6 +52,9 @@ class News(db.Model):
     reviewer_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     title = db.Column(db.String(200), nullable=False)
     body = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(20), nullable=False, default="study", server_default="study")
+    seed_key = db.Column(db.String(80))
+    external_url = db.Column(db.String(2048))
     status = db.Column(db.String(20), nullable=False, default="pending")
     created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
     reviewed_at = db.Column(db.DateTime)
@@ -58,8 +66,30 @@ class News(db.Model):
     location = db.Column(db.String(200))
     registration_url = db.Column(db.String(2048))
 
+    @property
+    def category_label(self):
+        return CATEGORIES.get(self.category, "Учёба")
+
+    @property
+    def author_name(self):
+        return "Редакция The UUST Times" if self.seed_key else self.author.email
+
     author = db.relationship("User", foreign_keys=[author_id], backref="submitted_items")
     reviewer = db.relationship("User", foreign_keys=[reviewer_id])
+
+
+class NewsReaction(db.Model):
+    __tablename__ = "news_reactions"
+    __table_args__ = (
+        CheckConstraint("kind IN (" + ", ".join(repr(code) for code in REACTIONS) + ")", name="ck_news_reactions_kind"),
+        Index("ix_news_reactions_counts", "news_id", "kind"),
+    )
+
+    # The composite primary key enforces one reaction per account and article.
+    news_id = db.Column(db.Integer, db.ForeignKey("news_items.id", ondelete="CASCADE"), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    kind = db.Column(db.String(20), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
 
 
 NewsItem = News

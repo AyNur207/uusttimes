@@ -145,6 +145,7 @@ class NewsTests(TestCase):
 
     def test_invalid_fields_do_not_create_records(self):
         cases = (
+            {"category": "unknown"}, {"category": ""},
             {"title": "   "}, {"title": "x" * 161}, {"body": "Коротко"},
             {"body": "x" * 20001}, {"registration_url": "javascript://example.org/alert(1)"},
             {"registration_url": "ftp://example.org/file"}, {"event_at": "not-a-date"},
@@ -155,6 +156,17 @@ class NewsTests(TestCase):
                 response = self.publish(**fields)
                 self.assertEqual(response.status_code, 400)
                 self.assertEqual(self.count(), 0)
+
+    def test_category_is_saved_for_member_and_admin_without_changing_moderation(self):
+        member = self.member_client()
+        self.assertEqual(self.publish(member, category="dorm", seed_key="news-001").status_code, 303)
+        self.assertEqual(self.publish(category="sport").status_code, 303)
+        with self.app.app_context():
+            pending, published = list(db.session.scalars(db.select(News).order_by(News.id)))
+            self.assertEqual((pending.category, pending.status, pending.seed_key), ("dorm", "pending", None))
+            self.assertEqual((published.category, published.status), ("sport", "published"))
+        self.assertIn("Общежития", member.get("/my-news").get_data(as_text=True))
+        self.assertNotIn("Турнир по шахматам", self.app.test_client().get("/?category=dorm").get_data(as_text=True))
 
     def test_text_is_escaped_and_line_breaks_preserved(self):
         title = '<script>alert("title")</script>'

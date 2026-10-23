@@ -79,7 +79,8 @@ class SchemaTests(TestCase):
                 db.engine.dispose()
             with closing(sqlite3.connect(path)) as connection:
                 columns = {row[1] for row in connection.execute("PRAGMA table_info(news_items)")}
-                self.assertTrue({"cover_data", "cover_filename", "published_at", "reviewer_note", "event_at", "location", "registration_url"} <= columns)
+                self.assertTrue({"cover_data", "cover_filename", "published_at", "reviewer_note", "event_at", "location", "registration_url", "category", "seed_key", "external_url"} <= columns)
+                self.assertEqual(connection.execute("SELECT category FROM news_items WHERE id = 9").fetchone()[0], "study")
 
     def test_postgres_urls_choose_installed_psycopg_driver(self):
         for value in ("postgres://user:password@host/database", "postgresql://user:password@host/database"):

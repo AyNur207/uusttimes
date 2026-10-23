@@ -1,4 +1,6 @@
 .news-card { overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+.news-category { display: inline-block; margin-bottom: 16px; padding: 4px 10px; border-radius: 4px; background: var(--purple-wash); color: var(--purple-ink); font-size: 12px; font-weight: 600; text-decoration: none; }
+.news-category:hover { text-decoration: underline; }
 .news-card + .news-card { margin-top: 24px; }
 .news-card-cover { display: block; }
 .news-card-cover img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }

@@ -31,15 +31,18 @@ class SupportTests(unittest.TestCase):
         links.feed(html)
         return html, links.links
 
-    def test_no_link_shows_pending_state(self):
+    def test_no_link_shows_temporarily_unavailable_state(self):
         html, links = self.render("")
-        self.assertIn("Готовим приём донатов", html)
+        self.assertIn("Временно недоступно", html)
+        self.assertIn("Ссылка на оплату недоступна", html)
+        self.assertNotIn("Готовим приём донатов", html)
+        self.assertNotIn("Здесь появится переход", html)
         self.assertEqual(links, [])
 
     def test_public_link_is_preserved_and_opens_separately(self):
         url = "https://pay.example.org/team?source=times&campaign=donations"
         html, links = self.render(f"  {url}  ")
-        self.assertNotIn("Готовим приём донатов", html)
+        self.assertNotIn("Ссылка на оплату недоступна", html)
         self.assertEqual(len(links), 1)
         self.assertEqual(links[0]["href"], url)
         self.assertEqual(links[0]["target"], "_blank")
@@ -58,7 +61,7 @@ class SupportTests(unittest.TestCase):
             with self.subTest(url=url):
                 html, links = self.render(url)
                 self.assertEqual(links, [])
-                self.assertIn("Готовим приём донатов", html)
+                self.assertIn("Ссылка на оплату недоступна", html)
 
     def test_link_attribute_cannot_inject_html(self):
         url = 'https://example.org/pay?note="/><script>alert(1)</script>'

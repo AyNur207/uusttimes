@@ -1,0 +1,26 @@
+{% if news.status == 'published' %}
+{% set state = reaction_states[news.id] %}
+{% set return_path = request.full_path.rstrip('?') ~ '#reactions-' ~ news.id %}
+<div class="news-reactions" id="reactions-{{ news.id }}" data-reaction-group data-news-id="{{ news.id }}">
+  <p class="news-reactions-label">Реакции</p>
+  {% if current_user.is_authenticated %}
+  <form class="news-reactions-list" method="post" action="{{ url_for('reactions.react', news_id=news.id) }}" data-reaction-form aria-label="Реакции на новость «{{ news.title }}»">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="next" value="{{ return_path }}">
+    {% for code, (emoji, label) in reaction_choices.items() %}
+    {% set selected = state.selected == code %}
+    <button class="news-reaction{% if selected %} is-selected{% endif %}" type="submit" name="reaction" value="{{ code }}" data-reaction="{{ code }}" data-label="{{ label }}" aria-pressed="{{ 'true' if selected else 'false' }}" aria-label="{{ label }}: {{ state.counts[code] }}{% if selected %}. Убрать реакцию{% endif %}" title="{{ 'Убрать реакцию' if selected else label }}"><span aria-hidden="true">{{ emoji }}</span> <span class="news-reaction-count" aria-hidden="true">{{ state.counts[code] }}</span></button>
+    {% endfor %}
+  </form>
+  <p class="news-reactions-hint">Одна реакция на новость. Нажмите выбранную ещё раз, чтобы убрать.</p>
+  {% else %}
+  <div class="news-reactions-list" aria-label="Реакции на новость «{{ news.title }}»">
+    {% for code, (emoji, label) in reaction_choices.items() %}
+    <a class="news-reaction" href="{{ url_for('auth.login', next=return_path) }}" aria-label="{{ label }}: {{ state.counts[code] }}. Войти, чтобы оставить реакцию" title="Войдите, чтобы оставить реакцию"><span aria-hidden="true">{{ emoji }}</span> <span class="news-reaction-count" aria-hidden="true">{{ state.counts[code] }}</span></a>
+    {% endfor %}
+  </div>
+  <p class="news-reactions-hint"><a href="{{ url_for('auth.login', next=return_path) }}">Войдите</a>, чтобы оставить реакцию.</p>
+  {% endif %}
+  <p class="news-reactions-feedback" role="status" aria-live="polite"></p>
+</div>
+{% endif %}

@@ -8,10 +8,11 @@
     <div class="news-card-meta">
       {% if request.endpoint == 'main.my_news' %}
       <span class="review-status review-status--{{ {'pending':'pending','published':'published','rejected':'rejected'}[news.status] }}">{{ {'pending':'На проверке','published':'Опубликована','rejected':'Отклонена'}[news.status] }}</span>
-      {% else %}<span>{{ news.author.email }}</span>{% endif %}
+      {% else %}<span>{{ news.author_name }}</span>{% endif %}
       {% set item_date = news.published_at or news.created_at %}
       <time datetime="{{ item_date.isoformat() }}Z">{{ item_date|ufa_time }}</time>
     </div>
+    <a class="news-category" href="{{ url_for('main.index', category=news.category) }}">{{ news.category_label }}</a>
     <h2><a href="{{ url_for('main.news_detail', news_id=news.id) }}">{{ news.title }}</a></h2>
     <p class="news-card-excerpt">{{ news.body|truncate(240) }}</p>
     {% if news.status == 'rejected' %}<p class="news-review-note"><strong>Причина отклонения:</strong> {{ news.reviewer_note or 'Редакция не указала причину.' }}</p>{% endif %}
@@ -22,5 +23,6 @@
     </div>
     {% endif %}
     <a class="text-link" href="{{ url_for('main.news_detail', news_id=news.id) }}">Читать полностью {{ icon('arrow') }}</a>
+    {% include 'partials/reactions.html' %}
   </div>
 </article>

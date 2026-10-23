@@ -3,8 +3,10 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from urllib.parse import urlsplit
-from wtforms import DateTimeLocalField, PasswordField, StringField, SubmitField, TextAreaField
+from wtforms import DateTimeLocalField, PasswordField, SelectField, StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, URL, ValidationError
+
+from .categories import CATEGORIES
 
 
 def strip_text(value):
@@ -48,6 +50,8 @@ class RejectForm(FlaskForm):
 
 
 class NewsForm(FlaskForm):
+    category = SelectField("Категория", choices=list(CATEGORIES.items()), default="study",
+                           validators=[DataRequired(message="Выберите категорию.")])
     title = StringField(
         "Заголовок",
         filters=[strip_text],

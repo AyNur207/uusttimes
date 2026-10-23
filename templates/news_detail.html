@@ -4,7 +4,7 @@
 {% block content %}
 <article class="news-article">
   <a class="text-link" href="{{ url_for('main.index') }}">← К ленте новостей</a>
-  <p class="eyebrow">Жизнь университета</p>
+  <a class="news-category" href="{{ url_for('main.index', category=news.category) }}">{{ news.category_label }}</a>
   <h1>{{ news.title }}</h1>
   {% if news.status != 'published' %}
   <div class="news-preview-note"><strong>{{ 'На проверке' if news.status == 'pending' else 'Отклонена' }}</strong><p>Материал пока доступен только автору и редакции.</p>{% if news.reviewer_note %}<p>Причина отклонения: {{ news.reviewer_note }}</p>{% endif %}</div>
@@ -19,8 +19,12 @@
   </dl>
   {% endif %}
   <div class="news-article-body">{{ news.body }}</div>
+  {% if news.external_url %}
+  <p><a class="text-link" href="{{ news.external_url }}" target="_blank" rel="noopener noreferrer">Открыть ссылку из новости {{ icon('arrow') }}<span class="visually-hidden"> (откроется в новой вкладке)</span></a></p>
+  {% endif %}
   {% if news.registration_url %}
   <a class="button" href="{{ news.registration_url }}" target="_blank" rel="noopener noreferrer">Регистрация на мероприятие {{ icon('arrow') }}<span class="visually-hidden"> (откроется в новой вкладке)</span></a>
   {% endif %}
+  {% include 'partials/reactions.html' %}
 </article>
 {% endblock %}

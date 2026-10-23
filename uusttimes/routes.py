@@ -1,21 +1,30 @@
 """Public feed and account-scoped news, with protected unpublished previews."""
 
-from flask import Blueprint, Response, abort, current_app, render_template, send_from_directory
+from flask import Blueprint, Response, abort, current_app, render_template, request, send_from_directory
 from flask_login import current_user, login_required
 
 from .models import News, db
 from .pagination import news_page
+from .categories import CATEGORIES
+from .reactions import reaction_context
 
 main = Blueprint("main", __name__)
 
 
 @main.get("/")
 def index():
-    pagination = news_page(
-        db.select(News).where(News.status == "published")
-        .order_by(News.published_at.desc(), News.id.desc())
+    category = request.args.get("category", "")
+    if category and category not in CATEGORIES:
+        abort(404)
+    statement = db.select(News).where(News.status == "published")
+    if category:
+        statement = statement.where(News.category == category)
+    pagination = news_page(statement.order_by(News.published_at.desc(), News.id.desc()))
+    return render_template(
+        "index.html", pagination=pagination, categories=CATEGORIES,
+        selected_category=category, pagination_args={"category": category} if category else {},
+        **reaction_context(pagination.items),
     )
-    return render_template("index.html", pagination=pagination)
 
 
 @main.get("/my-news")
@@ -25,7 +34,7 @@ def my_news():
         db.select(News).where(News.author_id == current_user.id)
         .order_by(News.created_at.desc(), News.id.desc())
     )
-    return render_template("my_news.html", pagination=pagination)
+    return render_template("my_news.html", pagination=pagination, **reaction_context(pagination.items))
 
 
 def visible_news(news_id):
@@ -40,7 +49,7 @@ def visible_news(news_id):
 @main.get("/news/<int:news_id>")
 def news_detail(news_id):
     item = visible_news(news_id)
-    response = Response(render_template("news_detail.html", news=item))
+    response = Response(render_template("news_detail.html", news=item, **reaction_context([item])))
     if item.status != "published":
         response.headers["Cache-Control"] = "private, no-store"
     return response

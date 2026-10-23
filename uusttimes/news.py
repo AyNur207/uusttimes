@@ -49,6 +49,7 @@ def submit():
         publish_now = current_user.is_admin
         item = News(
             author_id=current_user.id, title=form.title.data, body=form.body.data,
+            category=form.category.data,
             cover_filename=cover_filename, cover_data=cover_data, event_at=event_at,
             location=form.location.data or None, registration_url=form.registration_url.data or None,
             status="published" if publish_now else "pending", created_at=now,

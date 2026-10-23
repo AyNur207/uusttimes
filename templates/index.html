@@ -12,6 +12,12 @@
 </section>
 
 <div class="section-heading"><h2>Университет сегодня</h2><span>Публикаций: {{ pagination.total }}</span></div>
+<nav class="news-categories" aria-label="Категории новостей">
+  <a class="news-category-filter{% if not selected_category %} is-active{% endif %}" href="{{ url_for('main.index') }}"{% if not selected_category %} aria-current="page"{% endif %}>Все новости</a>
+  {% for code, label in categories.items() %}
+  <a class="news-category-filter{% if selected_category == code %} is-active{% endif %}" href="{{ url_for('main.index', category=code) }}"{% if selected_category == code %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
 <div class="home-columns">
   {% if pagination.items %}
   <section class="news-feed" aria-label="Опубликованные новости">
@@ -20,11 +26,19 @@
   </section>
   {% else %}
   <section class="feed-empty" aria-labelledby="feed-heading">
+    {% if selected_category %}
+    <div class="empty-icon">{{ icon('paper') }}</div>
+    <p class="eyebrow">{{ categories[selected_category] }}</p>
+    <h2 id="feed-heading">Здесь скоро<br>появятся новости.</h2>
+    <p>Пока можно почитать общую ленту или предложить свою историю.</p>
+    <a class="button" href="{{ url_for('main.index') }}">Все новости {{ icon('arrow') }}</a>
+    {% else %}
     <div class="empty-icon">{{ icon('paper') }}</div>
     <p class="eyebrow">Первая полоса ещё впереди</p>
     <h2 id="feed-heading">Хорошие истории<br>начинаются с вас.</h2>
     <p>Расскажите о событии в университете.<br class="desktop-break"> После проверки редакцией ваша новость появится здесь.</p>
     <a class="button" href="{{ url_for('news.submit') }}">Написать первую новость {{ icon('arrow') }}</a>
+    {% endif %}
   </section>
   {% endif %}
   <aside class="sidebar" aria-label="Об издании и поддержка">

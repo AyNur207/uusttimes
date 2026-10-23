@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 
 import click
 from dotenv import dotenv_values
-from flask import Flask, request, url_for
+from flask import Flask, jsonify, request, url_for
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFError, CSRFProtect
 from email_validator import EmailNotValidError, validate_email
@@ -93,9 +93,13 @@ def create_app(test_config=None):
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         PERMANENT_SESSION_LIFETIME=timedelta(days=90),
+        SEED_NEWS=None,
+        NEWS_CONTENT_FILE=str(root / "permanent.md"),
     )
     if test_config:
         app.config.update(test_config)
+    if app.config["SEED_NEWS"] is None:
+        app.config["SEED_NEWS"] = not app.testing
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     if not app.config["SECRET_KEY"]:
         app.config["SECRET_KEY"] = _local_secret_key(app.instance_path)
@@ -124,6 +128,21 @@ def create_app(test_config=None):
                     db.session.rollback()
                     if not db.session.scalar(db.select(User).where(User.email == admin_email)):
                         raise
+        if app.config["SEED_NEWS"]:
+            from .content import import_news
+
+            import_news(app.config["NEWS_CONTENT_FILE"], app.static_folder)
+
+    @app.cli.command("import-news")
+    @click.option("--update", is_flag=True, help="Обновить тексты и обложки существующих ID из Markdown.")
+    def import_bundled_news(update):
+        from .content import import_news
+
+        try:
+            created, updated = import_news(app.config["NEWS_CONTENT_FILE"], app.static_folder, update=update)
+        except (OSError, ValueError) as error:
+            raise click.ClickException(str(error)) from None
+        click.echo(f"Добавлено: {created}. Обновлено: {updated}.")
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -156,10 +175,12 @@ def create_app(test_config=None):
     from .routes import main
     from .auth import auth_bp
     from .news import news_bp
+    from .reactions import reactions_bp
 
     app.register_blueprint(main)
     app.register_blueprint(auth_bp)
     app.register_blueprint(news_bp)
+    app.register_blueprint(reactions_bp)
 
     @app.template_filter("ufa_time")
     def ufa_time(value):
@@ -180,10 +201,14 @@ def create_app(test_config=None):
     def csrf_expired(error):
         from flask import render_template
 
+        if request.endpoint == "reactions.react" and request.accept_mimetypes.best == "application/json":
+            return jsonify(message="Обновите страницу и попробуйте оставить реакцию ещё раз."), 400
         return render_template(
             "news_error.html", title="Обновите форму",
             message="Не удалось подтвердить отправку. Откройте форму заново и повторите попытку.",
-            return_url=url_for("auth.login" if request.endpoint and request.endpoint.startswith("auth.") else "news.submit"),
+            return_url=(url_for("main.news_detail", news_id=request.view_args["news_id"])
+                        if request.endpoint == "reactions.react" else
+                        url_for("auth.login" if request.endpoint and request.endpoint.startswith("auth.") else "news.submit")),
         ), 400
 
     @app.errorhandler(403)

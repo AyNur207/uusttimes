@@ -12,15 +12,10 @@ class InvalidCover(ValueError):
     pass
 
 
-def save_cover(upload):
-    limit = 5 * 1024 * 1024
-    data = upload.stream.read(limit + 1)
-    if len(data) > limit:
+def encode_cover(data):
+    """Use the same image checks for user uploads and bundled news."""
+    if len(data) > 5 * 1024 * 1024:
         raise InvalidCover("Размер обложки не должен превышать 5 МБ.")
-    filename = f"{uuid4().hex}.webp"
-    directory = Path(current_app.config["UPLOAD_FOLDER"])
-    directory.mkdir(parents=True, exist_ok=True)
-    destination = directory / filename
     try:
         with Image.open(BytesIO(data)) as image:
             if image.format not in {"JPEG", "PNG", "WEBP"}:
@@ -31,11 +26,24 @@ def save_cover(upload):
             if image.mode not in {"RGB", "RGBA"}:
                 image = image.convert("RGBA")
             image.thumbnail((1920, 1920))
-            image.save(destination, format="WEBP", quality=85)
+            output = BytesIO()
+            image.save(output, format="WEBP", quality=85)
+            return output.getvalue()
     except InvalidCover:
-        destination.unlink(missing_ok=True)
         raise
     except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as error:
-        destination.unlink(missing_ok=True)
         raise InvalidCover("Не удалось прочитать изображение. Выберите другой JPG, PNG или WebP.") from error
+
+
+def save_cover(upload):
+    data = encode_cover(upload.stream.read(5 * 1024 * 1024 + 1))
+    filename = f"{uuid4().hex}.webp"
+    directory = Path(current_app.config["UPLOAD_FOLDER"])
+    directory.mkdir(parents=True, exist_ok=True)
+    destination = directory / filename
+    try:
+        destination.write_bytes(data)
+    except OSError:
+        destination.unlink(missing_ok=True)
+        raise
     return filename

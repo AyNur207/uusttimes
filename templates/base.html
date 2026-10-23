@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reactions.css') }}">
   {% block styles %}{% endblock %}
 </head>
 <body>
@@ -73,6 +74,7 @@
     </div>
     <div class="footer-bottom"><span>© {{ current_year }} The UUST Times</span><span>Независимое студенческое издание · Уфа</span></div>
   </footer>
+  <script src="{{ url_for('static', filename='js/reactions.js') }}" defer></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
